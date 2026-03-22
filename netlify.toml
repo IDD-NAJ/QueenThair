@@ -1,0 +1,15 @@
+# Netlify deployment for Vite + React (SPA)
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Client-side routing (react-router BrowserRouter): serve index.html for all non-file routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

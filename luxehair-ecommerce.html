@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LUXE HAIR — Premium Hair Collections</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root {
+  --black: #111010;
+  --charcoal: #2A2825;
+  --dark-brown: #3B2E25;
+  --mid-brown: #5C4A3A;
+  --gold: #B09B72;
+  --gold-light: #C8B48F;
+  --gold-muted: #8C7B5E;
+  --cream: #F7F3EE;
+  --warm-white: #FAF8F5;
+  --neutral-100: #EDE8E1;
+  --neutral-200: #DDD7CE;
+  --neutral-300: #C5BDB2;
+  --neutral-400: #9E9589;
+  --neutral-500: #7A7269;
+  --neutral-600: #574F47;
+  --text-primary: #1C1A18;
+  --text-secondary: #5A524A;
+  --text-muted: #8C8278;
+  --border: #E2DDD6;
+  --border-dark: #C8C0B5;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --radius: 2px;
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--warm-white);color:var(--text-primary);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+img{max-width:100%;display:block}
+input,textarea,select{font-family:inherit}
+ul{list-style:none}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--neutral-100)}
+::-webkit-scrollbar-thumb{background:var(--neutral-300);border-radius:10px}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+
+.fade-up{animation:fadeUp 0.5s ease both}
+.fade-in{animation:fadeIn 0.4s ease both}
+
+/* TOP BAR */
+.top-bar{background:var(--charcoal);color:var(--neutral-300);font-size:12px;letter-spacing:0.06em;text-align:center;padding:8px 20px;display:flex;align-items:center;justify-content:space-between}
+.top-bar-center{display:flex;gap:28px;align-items:center}
+.top-bar-right{display:flex;gap:16px;align-items:center}
+.top-bar a{color:var(--neutral-300);transition:color var(--transition)}
+.top-bar a:hover{color:var(--gold-light)}
+
+/* HEADER */
+.header{background:var(--warm-white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1000;transition:box-shadow var(--transition)}
+.header.scrolled{box-shadow:var(--shadow-md)}
+.header-inner{max-width:1440px;margin:0 auto;padding:0 40px;display:flex;align-items:center;gap:32px;height:68px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;letter-spacing:0.12em;color:var(--charcoal);white-space:nowrap}
+.logo span{color:var(--gold)}
+
+/* MEGA NAV */
+.main-nav{flex:1;display:flex;align-items:center;gap:0}
+.nav-item{position:relative}
+.nav-link{font-size:12.5px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;color:var(--text-secondary);padding:8px 16px;cursor:pointer;transition:color var(--transition);white-space:nowrap;display:flex;align-items:center;gap:4px}
+.nav-link:hover,.nav-link.active{color:var(--charcoal)}
+.nav-link::after{content:'';position:absolute;bottom:-1px;left:16px;right:16px;height:1px;background:var(--gold);transform:scaleX(0);transition:transform var(--transition)}
+.nav-link:hover::after{transform:scaleX(1)}
+.nav-chevron{font-size:9px;transition:transform var(--transition)}
+.nav-item:hover .nav-chevron{transform:rotate(180deg)}
+
+.mega-menu{position:absolute;top:100%;left:50%;transform:translateX(-50%);background:var(--warm-white);border:1px solid var(--border);border-top:2px solid var(--gold);box-shadow:var(--shadow-lg);min-width:720px;padding:28px 32px;display:none;animation:slideDown 0.2s ease;z-index:999}
+.nav-item:hover .mega-menu{display:flex;gap:32px}
+.mega-col{min-width:160px}
+.mega-col-title{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.mega-link{display:block;font-size:13px;color:var(--text-secondary);padding:5px 0;transition:color var(--transition)}
+.mega-link:hover{color:var(--charcoal)}
+.mega-feature{background:var(--neutral-100);padding:16px;border-radius:var(--radius);min-width:180px}
+.mega-feature img{width:100%;height:120px;object-fit:cover;margin-bottom:10px;border-radius:var(--radius)}
+.mega-feature-title{font-size:13px;font-weight:500;color:var(--charcoal);margin-bottom:4px}
+.mega-feature-sub{font-size:11px;color:var(--text-muted)}
+
+/* HEADER RIGHT */
+.header-actions{display:flex;align-items:center;gap:6px}
+.action-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);color:var(--text-secondary);transition:all var(--transition);position:relative}
+.action-btn:hover{background:var(--neutral-100);color:var(--charcoal)}
+.action-btn svg{width:18px;height:18px;stroke-width:1.5}
+.badge{position:absolute;top:4px;right:4px;background:var(--gold);color:white;font-size:9px;font-weight:600;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+/* SEARCH BAR */
+.search-bar{flex:1;max-width:340px;position:relative}
+.search-input{width:100%;background:var(--neutral-100);border:1px solid var(--border);border-radius:var(--radius);padding:9px 36px 9px 14px;font-size:13px;color:var(--text-primary);transition:all var(--transition);outline:none}
+.search-input:focus{background:white;border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,155,114,0.1)}
+.search-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.search-icon svg{width:16px;height:16px;stroke-width:1.5}
+
+/* HERO */
+.hero{position:relative;height:600px;background:linear-gradient(135deg,#1C1A18 0%,#2E2620 45%,#3B2E25 100%);overflow:hidden;display:flex;align-items:center}
+.hero-bg{position:absolute;inset:0;opacity:0.15;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23B09B72' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-content{position:relative;z-index:2;max-width:1440px;margin:0 auto;padding:0 80px;width:100%}
+.hero-eyebrow{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.hero-eyebrow::before{content:'';width:32px;height:1px;background:var(--gold)}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:62px;font-weight:300;color:white;line-height:1.1;margin-bottom:20px}
+.hero-title strong{font-weight:500;font-style:italic;color:var(--gold-light)}
+.hero-sub{font-size:15px;color:rgba(255,255,255,0.6);max-width:440px;margin-bottom:36px;line-height:1.7}
+.hero-actions{display:flex;gap:14px;align-items:center}
+.btn-primary{background:var(--gold);color:white;padding:13px 32px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;border-radius:var(--radius);transition:all var(--transition);display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 6px 20px rgba(176,155,114,0.4)}
+.btn-outline{border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.8);padding:13px 28px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;border-radius:var(--radius);transition:all var(--transition)}
+.btn-outline:hover{border-color:rgba(255,255,255,0.7);color:white}
+.hero-stats{position:absolute;bottom:40px;right:80px;display:flex;gap:40px}
+.stat-item{text-align:right}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;color:white;line-height:1}
+.stat-label{font-size:11px;letter-spacing:0.1em;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:4px}
+.hero-badge{position:absolute;right:80px;top:40%;transform:translateY(-50%);width:120px;height:120px;border:1px solid rgba(176,155,114,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.hero-badge-text{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--gold-light);font-style:italic;line-height:1.3}
+
+/* PROMO BAR */
+.promo-bar{background:var(--neutral-100);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:48px;padding:14px;overflow:hidden}
+.promo-item{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-secondary);letter-spacing:0.04em;white-space:nowrap}
+.promo-item svg{width:16px;height:16px;color:var(--gold);flex-shrink:0}
+
+/* SECTION */
+.section{padding:72px 0}
+.section-inner{max-width:1440px;margin:0 auto;padding:0 40px}
+.section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px}
+.section-eyebrow{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.section-eyebrow::before{content:'';width:20px;height:1px;background:var(--gold)}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;color:var(--charcoal);line-height:1.2}
+.section-link{font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-muted);display:flex;align-items:center;gap:6px;transition:color var(--transition)}
+.section-link:hover{color:var(--gold)}
+
+/* CATEGORY GRID */
+.category-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.cat-card{position:relative;overflow:hidden;border-radius:var(--radius);cursor:pointer}
+.cat-card:first-child,.cat-card:nth-child(2){grid-column:span 2;grid-row:span 2}
+.cat-card:nth-child(3),.cat-card:nth-child(4){grid-column:span 2}
+.cat-img{width:100%;height:100%;min-height:200px;object-fit:cover;transition:transform 0.6s cubic-bezier(0.4,0,0.2,1)}
+.cat-card:hover .cat-img{transform:scale(1.04)}
+.cat-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(20,16,12,0.75) 0%,transparent 50%);transition:opacity var(--transition)}
+.cat-info{position:absolute;bottom:20px;left:20px;right:20px;color:white}
+.cat-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;margin-bottom:4px}
+.cat-count{font-size:11px;letter-spacing:0.08em;color:rgba(255,255,255,0.6)}
+.cat-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-light);margin-top:6px;transition:gap var(--transition)}
+.cat-card:hover .cat-btn{gap:8px}
+
+/* PRODUCT GRID */
+.product-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.product-grid-5{grid-template-columns:repeat(5,1fr)}
+
+.product-card{background:white;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);transition:all var(--transition);position:relative}
+.product-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);border-color:var(--border-dark)}
+.product-img-wrap{position:relative;overflow:hidden;aspect-ratio:3/4;background:var(--neutral-100)}
+.product-img{width:100%;height:100%;object-fit:cover;transition:transform 0.6s cubic-bezier(0.4,0,0.2,1)}
+.product-img-alt{width:100%;height:100%;object-fit:cover;transition:opacity 0.4s ease;position:absolute;inset:0;opacity:0}
+.product-card:hover .product-img-alt{opacity:1}
+.product-card:hover .product-img{transform:scale(1.03)}
+.product-badges{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:5px;z-index:2}
+.badge-sale{background:#8B4513;color:white;font-size:9px;font-weight:600;letter-spacing:0.08em;padding:3px 8px;border-radius:var(--radius)}
+.badge-new{background:var(--charcoal);color:white;font-size:9px;font-weight:600;letter-spacing:0.08em;padding:3px 8px;border-radius:var(--radius)}
+.badge-hot{background:var(--gold);color:white;font-size:9px;font-weight:600;letter-spacing:0.08em;padding:3px 8px;border-radius:var(--radius)}
+.product-actions{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px;opacity:0;transform:translateX(8px);transition:all var(--transition);z-index:2}
+.product-card:hover .product-actions{opacity:1;transform:translateX(0)}
+.product-action-btn{width:34px;height:34px;background:white;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md);transition:all var(--transition);color:var(--text-secondary)}
+.product-action-btn:hover{background:var(--charcoal);color:white}
+.product-action-btn.wishlisted{color:#c0392b}
+.product-action-btn svg{width:15px;height:15px;stroke-width:1.5}
+.product-quick-add{position:absolute;bottom:0;left:0;right:0;background:var(--charcoal);color:white;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;padding:11px;text-align:center;transform:translateY(100%);transition:transform var(--transition)}
+.product-card:hover .product-quick-add{transform:translateY(0)}
+.product-info{padding:14px 14px 16px}
+.product-name{font-size:13px;font-weight:400;color:var(--text-primary);margin-bottom:6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.product-rating{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.stars{display:flex;gap:2px}
+.star{color:var(--gold);font-size:11px}
+.star.empty{color:var(--neutral-300)}
+.review-count{font-size:11px;color:var(--text-muted)}
+.product-pricing{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.price-current{font-size:15px;font-weight:600;color:var(--charcoal)}
+.price-original{font-size:13px;color:var(--text-muted);text-decoration:line-through}
+.price-save{font-size:11px;color:#8B4513;font-weight:500}
+.product-variants{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.variant-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border);cursor:pointer;transition:border-color var(--transition)}
+.variant-dot:hover,.variant-dot.active{border-color:var(--charcoal)}
+
+/* FILTERS SIDEBAR */
+.catalog-layout{display:grid;grid-template-columns:240px 1fr;gap:32px;align-items:start}
+.filter-sidebar{position:sticky;top:88px}
+.filter-section{border-bottom:1px solid var(--border);padding:18px 0}
+.filter-section:first-child{padding-top:0}
+.filter-title{font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;color:var(--charcoal);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.filter-toggle{font-size:16px;color:var(--text-muted);transition:transform var(--transition)}
+.filter-option{display:flex;align-items:center;gap:10px;padding:4px 0;cursor:pointer}
+.filter-option input[type=checkbox]{width:14px;height:14px;accent-color:var(--gold);cursor:pointer}
+.filter-option-label{font-size:13px;color:var(--text-secondary);transition:color var(--transition)}
+.filter-option:hover .filter-option-label{color:var(--charcoal)}
+.filter-option-count{font-size:11px;color:var(--text-muted);margin-left:auto}
+.color-swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color var(--transition)}
+.swatch:hover,.swatch.active{border-color:var(--charcoal)}
+.price-range{padding:8px 0}
+.price-slider{width:100%;accent-color:var(--gold);cursor:pointer}
+.price-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-top:6px}
+
+/* TOOLBAR */
+.catalog-toolbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:24px}
+.result-count{font-size:13px;color:var(--text-secondary)}
+.toolbar-right{display:flex;align-items:center;gap:16px}
+.sort-select{font-size:13px;color:var(--text-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:7px 12px;background:white;cursor:pointer;outline:none}
+.view-toggle{display:flex;gap:4px}
+.view-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);color:var(--text-muted);transition:all var(--transition)}
+.view-btn.active,.view-btn:hover{background:var(--neutral-100);color:var(--charcoal)}
+.view-btn svg{width:15px;height:15px}
+
+/* PRODUCT DETAIL */
+.pdp-layout{display:grid;grid-template-columns:1fr 480px;gap:48px;align-items:start;max-width:1200px;margin:0 auto;padding:40px}
+.pdp-gallery{position:sticky;top:88px}
+.gallery-main{aspect-ratio:3/4;background:var(--neutral-100);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
+.gallery-main img{width:100%;height:100%;object-fit:cover}
+.gallery-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.gallery-thumb{aspect-ratio:1;background:var(--neutral-100);border-radius:var(--radius);overflow:hidden;border:2px solid transparent;cursor:pointer;transition:border-color var(--transition)}
+.gallery-thumb.active,.gallery-thumb:hover{border-color:var(--gold)}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover}
+
+/* PDP INFO */
+.pdp-breadcrumb{font-size:12px;color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:6px}
+.pdp-breadcrumb span{color:var(--charcoal)}
+.pdp-brand{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.pdp-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--charcoal);line-height:1.2;margin-bottom:12px}
+.pdp-rating{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.pdp-price{display:flex;align-items:baseline;gap:12px;margin-bottom:24px}
+.pdp-price-current{font-size:28px;font-weight:600;color:var(--charcoal)}
+.pdp-price-original{font-size:18px;color:var(--text-muted);text-decoration:line-through}
+.pdp-price-save{font-size:13px;background:rgba(139,69,19,0.1);color:#8B4513;padding:3px 10px;border-radius:var(--radius)}
+
+.variant-section{margin-bottom:22px}
+.variant-label{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;color:var(--text-secondary);margin-bottom:10px}
+.variant-label span{color:var(--charcoal);font-weight:600}
+.color-variants{display:flex;gap:8px;flex-wrap:wrap}
+.color-swatch-lg{width:44px;height:44px;border-radius:var(--radius);cursor:pointer;border:2px solid transparent;transition:all var(--transition);position:relative;overflow:hidden}
+.color-swatch-lg img{width:100%;height:100%;object-fit:cover}
+.color-swatch-lg.active{border-color:var(--charcoal);box-shadow:0 0 0 2px var(--charcoal)}
+.size-variants{display:flex;gap:8px;flex-wrap:wrap}
+.size-btn{min-width:52px;height:36px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text-secondary);padding:0 12px;transition:all var(--transition);cursor:pointer;background:white}
+.size-btn:hover,.size-btn.active{border-color:var(--charcoal);background:var(--charcoal);color:white}
+.size-btn.unavailable{opacity:0.35;cursor:not-allowed;text-decoration:line-through}
+
+.qty-section{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.qty-control{display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.qty-btn{width:36px;height:40px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-secondary);transition:all var(--transition);cursor:pointer}
+.qty-btn:hover{background:var(--neutral-100);color:var(--charcoal)}
+.qty-val{width:44px;text-align:center;font-size:14px;font-weight:500;color:var(--charcoal);border-left:1px solid var(--border);border-right:1px solid var(--border);height:40px;display:flex;align-items:center;justify-content:center}
+.add-to-cart-btn{flex:1;background:var(--charcoal);color:white;padding:14px 24px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;border-radius:var(--radius);transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:8px}
+.add-to-cart-btn:hover{background:var(--dark-brown);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.2)}
+.wishlist-btn-pdp{width:46px;height:46px;border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all var(--transition)}
+.wishlist-btn-pdp:hover{border-color:var(--charcoal);color:var(--charcoal)}
+.wishlist-btn-pdp.active{border-color:#c0392b;color:#c0392b}
+.wishlist-btn-pdp svg{width:18px;height:18px;stroke-width:1.5}
+
+.pdp-meta{border-top:1px solid var(--border);margin-top:24px;padding-top:20px}
+.pdp-meta-row{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:var(--text-secondary)}
+.pdp-meta-row svg{width:16px;height:16px;color:var(--gold);flex-shrink:0}
+
+.pdp-tabs{margin-top:32px;border-top:1px solid var(--border)}
+.tab-headers{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tab-btn{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;padding:12px 20px;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all var(--transition);cursor:pointer}
+.tab-btn.active{color:var(--charcoal);border-bottom-color:var(--gold)}
+.tab-content{font-size:13px;color:var(--text-secondary);line-height:1.8}
+
+/* CART DRAWER */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;opacity:0;pointer-events:none;transition:opacity var(--transition)}
+.cart-overlay.open{opacity:1;pointer-events:all}
+.cart-drawer{position:fixed;right:0;top:0;bottom:0;width:420px;background:white;z-index:2001;transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.cart-drawer.open{transform:translateX(0)}
+.cart-header{padding:24px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cart-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--charcoal)}
+.cart-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);color:var(--text-secondary);transition:all var(--transition)}
+.cart-close:hover{background:var(--neutral-100);color:var(--charcoal)}
+.cart-close svg{width:18px;height:18px}
+.cart-body{flex:1;overflow-y:auto;padding:20px 24px}
+.cart-empty{text-align:center;padding:60px 24px;color:var(--text-muted)}
+.cart-empty-icon{font-size:48px;margin-bottom:16px;opacity:0.3}
+.cart-empty-text{font-family:'Cormorant Garamond',serif;font-size:20px;margin-bottom:8px;color:var(--text-secondary)}
+.cart-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
+.cart-item-img{width:80px;height:100px;background:var(--neutral-100);border-radius:var(--radius);object-fit:cover;flex-shrink:0}
+.cart-item-info{flex:1;min-width:0}
+.cart-item-name{font-size:13px;font-weight:500;color:var(--charcoal);margin-bottom:4px;line-height:1.3}
+.cart-item-variant{font-size:11px;color:var(--text-muted);margin-bottom:8px}
+.cart-item-footer{display:flex;align-items:center;justify-content:space-between}
+.cart-item-qty{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary)}
+.cart-item-qty-btn{width:22px;height:22px;border:1px solid var(--border);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--transition)}
+.cart-item-qty-btn:hover{background:var(--neutral-100)}
+.cart-item-price{font-size:14px;font-weight:600;color:var(--charcoal)}
+.cart-item-remove{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;transition:color var(--transition)}
+.cart-item-remove:hover{color:#c0392b}
+.cart-footer{padding:20px 24px;border-top:1px solid var(--border)}
+.cart-totals{margin-bottom:16px}
+.cart-total-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);margin-bottom:6px}
+.cart-total-row.total{font-size:16px;font-weight:600;color:var(--charcoal);border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
+.checkout-btn{width:100%;background:var(--charcoal);color:white;padding:15px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;border-radius:var(--radius);transition:all var(--transition);margin-bottom:8px}
+.checkout-btn:hover{background:var(--dark-brown)}
+.continue-btn{width:100%;border:1px solid var(--border);color:var(--text-secondary);padding:13px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;border-radius:var(--radius);transition:all var(--transition)}
+.continue-btn:hover{border-color:var(--charcoal);color:var(--charcoal)}
+
+/* CART PAGE */
+.cart-page-layout{display:grid;grid-template-columns:1fr 360px;gap:40px;align-items:start}
+.cart-table-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:16px;padding:0 0 12px;border-bottom:2px solid var(--border);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted)}
+
+/* WISHLIST */
+.wishlist-header{margin-bottom:32px}
+.wishlist-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;color:var(--charcoal)}
+
+/* ACCOUNT */
+.account-layout{display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:start}
+.account-nav{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.account-nav-item{display:flex;align-items:center;gap:12px;padding:13px 18px;font-size:13px;color:var(--text-secondary);transition:all var(--transition);cursor:pointer;border-bottom:1px solid var(--border)}
+.account-nav-item:last-child{border-bottom:none}
+.account-nav-item:hover,.account-nav-item.active{background:var(--neutral-100);color:var(--charcoal)}
+.account-nav-item svg{width:16px;height:16px;color:var(--gold)}
+.account-card{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:28px}
+.account-card-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--charcoal);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+
+/* AUTH */
+.auth-container{max-width:440px;margin:80px auto;padding:0 20px}
+.auth-card{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:40px}
+.auth-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;text-align:center;color:var(--charcoal);margin-bottom:6px}
+.auth-sub{text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px}
+.form-input{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;font-size:13px;color:var(--text-primary);transition:all var(--transition);outline:none;background:white}
+.form-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,155,114,0.1)}
+.form-input::placeholder{color:var(--neutral-400)}
+.btn-full{width:100%;background:var(--charcoal);color:white;padding:13px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;border-radius:var(--radius);transition:all var(--transition)}
+.btn-full:hover{background:var(--dark-brown)}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text-muted);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.social-btn{width:100%;border:1px solid var(--border);padding:11px;border-radius:var(--radius);font-size:13px;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;gap:10px;transition:all var(--transition);margin-bottom:8px}
+.social-btn:hover{border-color:var(--charcoal);color:var(--charcoal)}
+.auth-switch{text-align:center;font-size:13px;color:var(--text-muted);margin-top:20px}
+.auth-switch a{color:var(--gold);cursor:pointer}
+
+/* CHECKOUT */
+.checkout-layout{display:grid;grid-template-columns:1fr 400px;gap:48px;align-items:start}
+.checkout-steps{display:flex;gap:0;margin-bottom:32px}
+.checkout-step{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);padding-right:24px;position:relative}
+.checkout-step.active{color:var(--charcoal)}
+.checkout-step.done{color:var(--gold)}
+.step-num{width:26px;height:26px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.checkout-step.done .step-num{background:var(--gold);border-color:var(--gold);color:white}
+.step-separator{flex:1;height:1px;background:var(--border);margin:0 8px}
+.checkout-section-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--charcoal);margin-bottom:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.order-summary-card{background:var(--neutral-100);border-radius:var(--radius);padding:24px;position:sticky;top:88px}
+.order-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-dark)}
+.order-item-img{width:60px;height:75px;background:var(--neutral-200);border-radius:var(--radius);object-fit:cover;position:relative}
+.order-item-qty{position:absolute;top:-5px;right:-5px;background:var(--neutral-500);color:white;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.order-item-name{font-size:12px;color:var(--charcoal);font-weight:500;margin-bottom:3px}
+.order-item-variant{font-size:11px;color:var(--text-muted)}
+.coupon-row{display:flex;gap:8px;margin:16px 0}
+.coupon-input{flex:1;border:1px solid var(--border-dark);border-radius:var(--radius);padding:10px 12px;font-size:13px;background:white;outline:none;transition:border-color var(--transition)}
+.coupon-input:focus{border-color:var(--gold)}
+.coupon-btn{background:var(--charcoal);color:white;padding:10px 18px;border-radius:var(--radius);font-size:12px;letter-spacing:0.08em;font-weight:500;white-space:nowrap;transition:background var(--transition)}
+.coupon-btn:hover{background:var(--dark-brown)}
+
+/* BANNER */
+.banner-section{background:var(--charcoal);padding:56px 40px;position:relative;overflow:hidden}
+.banner-bg-pattern{position:absolute;inset:0;opacity:0.04;background-image:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff'%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3C/g%3E%3C/svg%3E")}
+.banner-inner{max-width:800px;margin:0 auto;text-align:center;position:relative;z-index:1}
+.banner-eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.banner-title{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:300;color:white;margin-bottom:12px}
+.banner-title em{font-style:italic;color:var(--gold-light)}
+.banner-sub{font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:28px}
+.newsletter-form{display:flex;max-width:440px;margin:0 auto;gap:8px}
+.newsletter-input{flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius);padding:12px 16px;font-size:13px;color:white;outline:none;transition:all var(--transition)}
+.newsletter-input::placeholder{color:rgba(255,255,255,0.4)}
+.newsletter-input:focus{background:rgba(255,255,255,0.15);border-color:var(--gold)}
+.newsletter-btn{background:var(--gold);color:white;padding:12px 24px;border-radius:var(--radius);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;transition:all var(--transition);white-space:nowrap}
+.newsletter-btn:hover{background:var(--gold-light)}
+
+/* FOOTER */
+.footer{background:var(--charcoal);color:var(--neutral-400);padding-top:64px}
+.footer-inner{max-width:1440px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.footer-brand .logo{color:white;margin-bottom:16px;display:block;font-size:22px}
+.footer-desc{font-size:13px;line-height:1.8;max-width:260px;margin-bottom:20px}
+.footer-social{display:flex;gap:10px}
+.social-icon{width:36px;height:36px;border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--neutral-400);transition:all var(--transition)}
+.social-icon:hover{border-color:var(--gold);color:var(--gold)}
+.social-icon svg{width:16px;height:16px}
+.footer-col-title{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:600;color:white;margin-bottom:16px}
+.footer-links{display:flex;flex-direction:column;gap:8px}
+.footer-link{font-size:13px;color:var(--neutral-400);transition:color var(--transition);cursor:pointer}
+.footer-link:hover{color:var(--gold-light)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.08);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;max-width:1440px;margin:0 auto}
+.footer-bottom-left{font-size:12px;color:var(--neutral-500)}
+.footer-payment{display:flex;gap:8px;align-items:center}
+.payment-icon{background:rgba(255,255,255,0.08);border-radius:3px;padding:4px 8px;font-size:10px;color:var(--neutral-400);letter-spacing:0.06em;font-weight:600}
+
+/* INFO PAGES */
+.info-page{max-width:800px;margin:0 auto;padding:48px 40px}
+.info-title{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:400;color:var(--charcoal);margin-bottom:8px}
+.info-sub{font-size:14px;color:var(--text-muted);margin-bottom:36px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.info-h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;color:var(--charcoal);margin:28px 0 12px}
+.info-p{font-size:14px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px}
+.info-ul{padding-left:20px;margin-bottom:14px}
+.info-ul li{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:4px}
+
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);margin-bottom:28px;flex-wrap:wrap}
+.breadcrumb-sep{color:var(--neutral-300)}
+
+/* PAGE BANNER */
+.page-banner{background:linear-gradient(to right,var(--charcoal),var(--dark-brown));padding:36px 40px;margin-bottom:0}
+.page-banner-inner{max-width:1440px;margin:0 auto;padding:0}
+.page-banner-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;color:white;margin-bottom:4px}
+.page-banner-sub{font-size:13px;color:rgba(255,255,255,0.5)}
+
+/* TRUST BADGES */
+.trust-section{background:white;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 0}
+.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1440px;margin:0 auto;padding:0 40px}
+.trust-item{text-align:center;padding:16px}
+.trust-icon{width:44px;height:44px;background:var(--neutral-100);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.trust-icon svg{width:20px;height:20px;color:var(--gold)}
+.trust-title{font-size:13px;font-weight:600;color:var(--charcoal);margin-bottom:4px}
+.trust-sub{font-size:12px;color:var(--text-muted)}
+
+/* TABS */
+.filter-tags{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.filter-tag{padding:7px 18px;border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all var(--transition)}
+.filter-tag:hover,.filter-tag.active{background:var(--charcoal);border-color:var(--charcoal);color:white}
+
+/* REVIEW */
+.review-card{padding:20px 0;border-bottom:1px solid var(--border)}
+.review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.reviewer{font-size:13px;font-weight:500;color:var(--charcoal)}
+.review-date{font-size:12px;color:var(--text-muted)}
+.review-text{font-size:13px;color:var(--text-secondary);line-height:1.7}
+.verified{font-size:11px;color:var(--gold);margin-top:6px}
+
+/* MOBILE */
+.mobile-menu-btn{display:none}
+@media(max-width:1100px){
+  .product-grid{grid-template-columns:repeat(3,1fr)}
+  .category-grid{grid-template-columns:repeat(3,1fr)}
+  .cat-card:first-child,.cat-card:nth-child(2){grid-column:span 1;grid-row:span 1}
+}
+@media(max-width:768px){
+  .top-bar-left,.top-bar-right{display:none}
+  .header-inner{padding:0 16px}
+  .main-nav{display:none}
+  .mobile-menu-btn{display:flex}
+  .hero{height:420px}
+  .hero-content{padding:0 24px}
+  .hero-title{font-size:38px}
+  .hero-stats{display:none}
+  .hero-badge{display:none}
+  .product-grid{grid-template-columns:repeat(2,1fr);gap:14px}
+  .section-inner{padding:0 16px}
+  .catalog-layout{grid-template-columns:1fr}
+  .pdp-layout{grid-template-columns:1fr;padding:20px 16px}
+  .cart-page-layout{grid-template-columns:1fr}
+  .checkout-layout{grid-template-columns:1fr}
+  .footer-inner{grid-template-columns:1fr 1fr;gap:32px;padding:0 20px}
+  .cart-drawer{width:100%}
+  .trust-grid{grid-template-columns:repeat(2,1fr)}
+  .banner-title{font-size:30px}
+  .newsletter-form{flex-direction:column}
+}
+
+/* NOTIFICATION TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--charcoal);color:white;padding:14px 20px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-lg);z-index:3000;animation:slideDown 0.3s ease;min-width:240px}
+.toast svg{width:18px;height:18px;color:var(--gold);flex-shrink:0}
+
+/* SEARCH OVERLAY */
+.search-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1500;display:flex;flex-direction:column;align-items:center;padding-top:80px;opacity:0;pointer-events:none;transition:opacity var(--transition)}
+.search-overlay.open{opacity:1;pointer-events:all}
+.search-box{background:white;width:100%;max-width:680px;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg)}
+.search-box-input{width:100%;border:none;padding:18px 20px;font-size:16px;color:var(--text-primary);outline:none;border-bottom:1px solid var(--border)}
+.search-results{padding:16px}
+.search-result-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:var(--radius);cursor:pointer;transition:background var(--transition)}
+.search-result-item:hover{background:var(--neutral-100)}
+.search-result-img{width:44px;height:56px;background:var(--neutral-200);border-radius:var(--radius);object-fit:cover}
+.search-result-info{flex:1}
+.search-result-name{font-size:13px;font-weight:500;color:var(--charcoal)}
+.search-result-price{font-size:12px;color:var(--gold)}
+
+/* MISC */
+.divider{height:1px;background:var(--border);margin:32px 0}
+.tag{display:inline-block;background:var(--neutral-100);border:1px solid var(--border);border-radius:var(--radius);padding:3px 10px;font-size:11px;color:var(--text-secondary);letter-spacing:0.06em}
+.page-wrap{min-height:100vh}
+.img-placeholder{background:linear-gradient(135deg,#E8E3DC,#D4CCC3);width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--neutral-400)}
+.img-placeholder svg{width:28px;height:28px}
+.order-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--border);align-items:center;font-size:13px}
+.status-badge{padding:4px 10px;border-radius:var(--radius);font-size:11px;font-weight:500;letter-spacing:0.06em}
+.status-delivered{background:rgba(74,124,82,0.1);color:#4a7c52}
+.status-processing{background:rgba(176,155,114,0.1);color:var(--gold-muted)}
+.status-shipped{background:rgba(74,100,144,0.1);color:#4a6490}
+.pagination{display:flex;gap:6px;justify-content:center;margin-top:40px}
+.page-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all var(--transition)}
+.page-btn:hover,.page-btn.active{background:var(--charcoal);border-color:var(--charcoal);color:white}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, createContext, useContext } = React;
+
+/* ─── DATA ─── */
+const COLORS = {
+  natural: '#C19A6B', black: '#1A1A1A', brown: '#5C3A1E', blonde: '#E8C97A',
+  auburn: '#922B21', chestnut: '#6B3A2A', gray: '#9E9E9E', burgundy: '#800020',
+  ombre: 'linear-gradient(to right,#1A1A1A,#C19A6B)',
+  pink:'#D4A5A5'
+};
+
+const PRODUCTS = Array.from({length:40},(_,i)=>{
+  const names = [
+    'Silky Straight Full Lace Wig','Brazilian Body Wave Lace Front','Deep Wave 360 Lace Wig',
+    'Kinky Curly U-Part Wig','Loose Wave Headband Wig','Straight Bob Lace Front',
+    'Water Wave 13x4 Lace Wig','Highlight Colored T-Part Wig','Pixie Cut Short Wig',
+    'HD Transparent Lace Frontal','Closure Wig Natural Black','Glueless Full Lace Wig',
+    'Yaki Straight Lace Front','Italian Curly Human Hair','Coily Afro Textured Wig',
+    'Burgundy Ombre Lace Wig','Honey Blonde Highlight','Dark Brown Wavy Bob'
+  ];
+  const cats = ['lace-front','360-lace','full-lace','headband','closure','u-part'];
+  const prices = [89,119,149,179,219,269,329,399,449,499];
+  const base = prices[i%prices.length];
+  const orig = Math.random()>0.5 ? Math.round(base*1.3) : null;
+  const colorKeys = Object.keys(COLORS);
+  return {
+    id: i+1,
+    name: names[i%names.length]+' '+(i>17?'Premium':''),
+    category: cats[i%cats.length],
+    price: base,
+    originalPrice: orig,
+    rating: (3.8+Math.random()*1.2).toFixed(1),
+    reviews: Math.floor(80+Math.random()*420),
+    colors: colorKeys.slice(i%colorKeys.length,(i%colorKeys.length)+4).map(k=>({key:k,hex:typeof COLORS[k]==='string'&&COLORS[k].startsWith('#')?COLORS[k]:'#C19A6B'})),
+    isNew: i%7===0, isSale: orig!==null, isHot: i%11===0,
+    inStock: Math.random()>0.1,
+    lengths: ['10"','12"','14"','16"','18"','20"','22"','24"'],
+    density: ['130%','150%','180%','200%'],
+    images: Array.from({length:4},(_,j)=>`img_${i}_${j}`)
+  };
+});
+
+const CATEGORIES = [
+  {id:'lace-front',name:'Lace Front Wigs',count:148,color:'#3B2E25'},
+  {id:'360-lace',name:'360 Lace Wigs',count:86,color:'#2A2825'},
+  {id:'full-lace',name:'Full Lace Wigs',count:62,color:'#5C4A3A'},
+  {id:'headband',name:'Headband Wigs',count:54,color:'#3B2E25'},
+  {id:'closure',name:'Closure Wigs',count:73,color:'#2A2825'},
+  {id:'u-part',name:'U-Part Wigs',count:41,color:'#5C4A3A'},
+];
+
+const NAV = [
+  {label:'Lace Front Wigs',cols:[
+    {title:'By Texture',links:['Straight','Body Wave','Deep Wave','Curly','Kinky Curly','Water Wave','Loose Wave']},
+    {title:'By Length',links:['Short (8-12")','Medium (14-18")','Long (20-24")','Extra Long (26"+)']},
+    {title:'By Color',links:['Natural Black','Brown','Blonde','Ombre','Highlight','Colored']},
+    {title:'Featured',feature:true,title2:'New Arrivals',sub:'Shop the latest styles',img:null},
+  ]},
+  {label:'360 Lace Wigs',cols:[
+    {title:'By Type',links:['360 Full Lace','360 Transparent','360 HD Lace','Pre-Plucked 360']},
+    {title:'By Texture',links:['Straight','Body Wave','Deep Wave','Curly','Water Wave']},
+    {title:'By Length',links:['Short','Medium','Long','Extra Long']},
+  ]},
+  {label:'Full Lace Wigs',cols:[
+    {title:'By Texture',links:['Silky Straight','Body Wave','Deep Wave','Curly','Yaki']},
+    {title:'By Cap',links:['Glueless','Pre-Plucked','Baby Hair','Swiss Lace']},
+  ]},
+  {label:'Closures & Frontals',cols:[
+    {title:'Closures',links:['4x4 Closure','5x5 Closure','6x6 Closure','HD Closure']},
+    {title:'Frontals',links:['13x4 Frontal','13x6 Frontal','HD Frontal','Transparent']},
+  ]},
+  {label:'Hair Extensions',cols:[
+    {title:'Type',links:['Clip-In Extensions','Tape-In Extensions','Weft Hair','I-Tip','Nano Ring']},
+    {title:'Texture',links:['Straight','Wavy','Curly','Kinky Straight']},
+  ]},
+  {label:'Sale',cols:[
+    {title:'Deals',links:['Up to 20% Off','Up to 30% Off','Up to 50% Off','Clearance']},
+    {title:'Collections',links:['Bundle Deals','Buy 2 Save','Flash Sale','Seasonal Offers']},
+  ]},
+];
+
+/* ─── CONTEXT ─── */
+const AppCtx = createContext();
+function AppProvider({children}){
+  const [page,setPage]=useState({name:'home',data:{}});
+  const [cart,setCart]=useState([]);
+  const [wishlist,setWishlist]=useState([]);
+  const [cartOpen,setCartOpen]=useState(false);
+  const [searchOpen,setSearchOpen]=useState(false);
+  const [toast,setToast]=useState(null);
+  const [scrolled,setScrolled]=useState(false);
+
+  useEffect(()=>{
+    const h=()=>setScrolled(window.scrollY>40);
+    window.addEventListener('scroll',h);
+    return()=>window.removeEventListener('scroll',h);
+  },[]);
+
+  const showToast=(msg)=>{
+    setToast(msg);
+    setTimeout(()=>setToast(null),3000);
+  };
+
+  const addToCart=(product,opts={})=>{
+    setCart(prev=>{
+      const key=`${product.id}-${JSON.stringify(opts)}`;
+      const ex=prev.find(i=>i.key===key);
+      if(ex) return prev.map(i=>i.key===key?{...i,qty:i.qty+1}:i);
+      return [...prev,{...product,qty:1,opts,key}];
+    });
+    showToast('Added to cart');
+    setCartOpen(true);
+  };
+
+  const removeFromCart=(key)=>setCart(prev=>prev.filter(i=>i.key!==key));
+  const updateQty=(key,delta)=>setCart(prev=>prev.map(i=>i.key===key?{...i,qty:Math.max(1,i.qty+delta)}:i));
+  const toggleWishlist=(id)=>{
+    setWishlist(prev=>prev.includes(id)?prev.filter(i=>i!==id):[...prev,id]);
+    showToast(wishlist.includes(id)?'Removed from wishlist':'Added to wishlist');
+  };
+
+  const cartTotal=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const cartCount=cart.reduce((s,i)=>s+i.qty,0);
+
+  return <AppCtx.Provider value={{page,setPage,cart,addToCart,removeFromCart,updateQty,wishlist,toggleWishlist,cartOpen,setCartOpen,cartTotal,cartCount,searchOpen,setSearchOpen,toast,showToast}}>
+    {children}
+  </AppCtx.Provider>;
+}
+const useApp=()=>useContext(AppCtx);
+
+/* ─── ICONS ─── */
+const I={
+  bag:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
+  heart:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
+  user:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  search:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  x:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  menu:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  truck:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
+  shield:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  refresh:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>,
+  phone:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 013.07 9.81 2 2 0 015.07 7.61h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L9.91 15a16 16 0 006.29 6.29l.38-.38a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>,
+  grid:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+  list:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+  arrow:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+  check:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>,
+  star:(filled)=><svg viewBox="0 0 24 24" fill={filled?"currentColor":"none"} stroke="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  mail:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+  map:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  eye:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+};
+
+/* ─── STARS ─── */
+function Stars({rating,size=11}){
+  const full=Math.floor(rating),half=rating%1>=0.5;
+  return <div className="stars" style={{fontSize:size+'px'}}>
+    {Array.from({length:5},(_,i)=><span key={i} className={i<full?'star':'star empty'}>★</span>)}
+  </div>;
+}
+
+/* ─── IMG PLACEHOLDER ─── */
+function Img({style={},className='',seed=1}){
+  const hues=['#C4B49A','#B8A882','#D4C8B4','#A89070','#C8B89A','#E0D4BC'];
+  const bg=hues[seed%hues.length];
+  return <div style={{...style,background:`linear-gradient(135deg,${bg},${hues[(seed+2)%hues.length]})`,display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}} className={className}>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+  </div>;
+}
+
+/* ─── PRODUCT CARD ─── */
+function ProductCard({p,onQuickView}){
+  const {addToCart,toggleWishlist,wishlist,setPage}=useApp();
+  const wishlisted=wishlist.includes(p.id);
+  const [activeColor,setActiveColor]=useState(0);
+  return <div className="product-card fade-up" onClick={()=>setPage({name:'product',data:{id:p.id}})}>
+    <div className="product-img-wrap">
+      <Img seed={p.id} style={{position:'absolute',inset:0}}/>
+      <div className="product-badges">
+        {p.isNew&&<span className="badge-new">NEW</span>}
+        {p.isSale&&<span className="badge-sale">SALE</span>}
+        {p.isHot&&<span className="badge-hot">HOT</span>}
+      </div>
+      <div className="product-actions">
+        <button className={`product-action-btn${wishlisted?' wishlisted':''}`} onClick={e=>{e.stopPropagation();toggleWishlist(p.id)}} title="Wishlist">
+          <I.heart/>
+        </button>
+        <button className="product-action-btn" onClick={e=>{e.stopPropagation();onQuickView&&onQuickView(p)}} title="Quick View">
+          <I.eye/>
+        </button>
+      </div>
+      <button className="product-quick-add" onClick={e=>{e.stopPropagation();addToCart(p)}}>Add to Cart</button>
+    </div>
+    <div className="product-info">
+      <div className="product-name">{p.name}</div>
+      <div className="product-rating"><Stars rating={parseFloat(p.rating)}/><span className="review-count">({p.reviews})</span></div>
+      <div className="product-pricing">
+        <span className="price-current">${p.price}</span>
+        {p.originalPrice&&<><span className="price-original">${p.originalPrice}</span><span className="price-save">Save ${p.originalPrice-p.price}</span></>}
+      </div>
+      <div className="product-variants">
+        {p.colors.map((c,i)=><div key={i} className={`variant-dot${activeColor===i?' active':''}`} style={{background:c.hex}} onClick={e=>{e.stopPropagation();setActiveColor(i)}} title={c.key}/>)}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ─── CART DRAWER ─── */
+function CartDrawer(){
+  const {cart,cartOpen,setCartOpen,removeFromCart,updateQty,cartTotal,setPage}=useApp();
+  return <>
+    <div className={`cart-overlay${cartOpen?' open':''}`} onClick={()=>setCartOpen(false)}/>
+    <div className={`cart-drawer${cartOpen?' open':''}`}>
+      <div className="cart-header">
+        <span className="cart-title">Your Cart ({cart.reduce((s,i)=>s+i.qty,0)})</span>
+        <button className="cart-close" onClick={()=>setCartOpen(false)}><I.x/></button>
+      </div>
+      <div className="cart-body">
+        {cart.length===0?<div className="cart-empty">
+          <div className="cart-empty-icon">🛍</div>
+          <div className="cart-empty-text">Your cart is empty</div>
+          <p style={{fontSize:13,color:'var(--text-muted)'}}>Add items to get started</p>
+        </div>:cart.map(item=><div key={item.key} className="cart-item">
+          <Img seed={item.id} style={{width:80,height:100,borderRadius:'var(--radius)',flexShrink:0}}/>
+          <div className="cart-item-info">
+            <div className="cart-item-name">{item.name}</div>
+            {item.opts.length&&<div className="cart-item-variant">Length: {item.opts.length}</div>}
+            <div className="cart-item-footer">
+              <div className="cart-item-qty">
+                <div className="cart-item-qty-btn" onClick={()=>updateQty(item.key,-1)}>−</div>
+                <span>{item.qty}</span>
+                <div className="cart-item-qty-btn" onClick={()=>updateQty(item.key,1)}>+</div>
+              </div>
+              <div className="cart-item-price">${item.price*item.qty}</div>
+            </div>
+            <div className="cart-item-remove" onClick={()=>removeFromCart(item.key)}>Remove</div>
+          </div>
+        </div>)}
+      </div>
+      <div className="cart-footer">
+        <div className="cart-totals">
+          <div className="cart-total-row"><span>Subtotal</span><span>${cartTotal.toFixed(2)}</span></div>
+          <div className="cart-total-row"><span>Shipping</span><span style={{color:'var(--gold)'}}>FREE</span></div>
+          <div className="cart-total-row total"><span>Total</span><span>${cartTotal.toFixed(2)}</span></div>
+        </div>
+        <button className="checkout-btn" onClick={()=>{setCartOpen(false);setPage({name:'checkout'})}}>Proceed to Checkout</button>
+        <button className="continue-btn" onClick={()=>setCartOpen(false)}>Continue Shopping</button>
+      </div>
+    </div>
+  </>;
+}
+
+/* ─── SEARCH OVERLAY ─── */
+function SearchOverlay(){
+  const {searchOpen,setSearchOpen,setPage}=useApp();
+  const [q,setQ]=useState('');
+  const results=q.length>1?PRODUCTS.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())).slice(0,5):[];
+  return <div className={`search-overlay${searchOpen?' open':''}`} onClick={()=>setSearchOpen(false)}>
+    <div className="search-box" onClick={e=>e.stopPropagation()}>
+      <input className="search-box-input" placeholder="Search for wigs, styles, textures..." value={q} onChange={e=>setQ(e.target.value)} autoFocus={searchOpen}/>
+      <div className="search-results">
+        {results.length>0?results.map(p=><div key={p.id} className="search-result-item" onClick={()=>{setPage({name:'product',data:{id:p.id}});setSearchOpen(false);setQ('')}}>
+          <Img seed={p.id} style={{width:44,height:56,borderRadius:'var(--radius)'}}/>
+          <div className="search-result-info">
+            <div className="search-result-name">{p.name}</div>
+            <div className="search-result-price">${p.price}</div>
+          </div>
+        </div>):q.length>1?<div style={{padding:'12px',fontSize:13,color:'var(--text-muted)',textAlign:'center'}}>No results for "{q}"</div>:
+        <div style={{padding:'8px 0'}}>
+          <div style={{fontSize:11,letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--text-muted)',marginBottom:10}}>Popular Searches</div>
+          {['Lace Front Wigs','Body Wave','Straight Wigs','HD Lace'].map(t=><div key={t} className="search-result-item" onClick={()=>{setQ(t)}} style={{fontSize:13,color:'var(--text-secondary)'}}>{t}</div>)}
+        </div>}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ─── TOAST ─── */
+function Toast(){
+  const {toast}=useApp();
+  if(!toast) return null;
+  return <div className="toast"><I.check/><span>{toast}</span></div>;
+}
+
+/* ─── HEADER ─── */
+function Header(){
+  const {scrolled,cartCount,wishlist,setCartOpen,setSearchOpen,setPage}=useApp();
+  return <header className={`header${scrolled?' scrolled':''}`}>
+    <div className="header-inner">
+      <div className="logo" onClick={()=>setPage({name:'home'})} style={{cursor:'pointer'}}>LUXE<span>HAIR</span></div>
+      <nav className="main-nav">
+        {NAV.map((item,i)=><div key={i} className="nav-item">
+          <div className="nav-link" onClick={()=>setPage({name:'catalog',data:{cat:item.label}})}>
+            {item.label} <span className="nav-chevron">▾</span>
+          </div>
+          <div className="mega-menu">
+            {item.cols.map((col,j)=><div key={j} className="mega-col">
+              {col.feature?<div className="mega-feature">
+                <Img seed={i*10+j} style={{width:'100%',height:120,borderRadius:'var(--radius)'}}/>
+                <div className="mega-feature-title">{col.title2}</div>
+                <div className="mega-feature-sub">{col.sub}</div>
+              </div>:<>
+                <div className="mega-col-title">{col.title}</div>
+                {col.links.map((l,k)=><div key={k} className="mega-link" onClick={()=>setPage({name:'catalog',data:{cat:item.label,filter:l}})}>{l}</div>)}
+              </>}
+            </div>)}
+          </div>
+        </div>)}
+      </nav>
+      <div className="search-bar">
+        <input className="search-input" placeholder="Search styles, textures..." onClick={()=>setSearchOpen(true)} readOnly/>
+        <span className="search-icon"><I.search/></span>
+      </div>
+      <div className="header-actions">
+        <button className="action-btn" onClick={()=>setPage({name:'account'})} title="Account"><I.user/></button>
+        <button className="action-btn" onClick={()=>setPage({name:'wishlist'})} title="Wishlist">
+          <I.heart/>{wishlist.length>0&&<span className="badge">{wishlist.length}</span>}
+        </button>
+        <button className="action-btn" onClick={()=>setCartOpen(true)} title="Cart">
+          <I.bag/>{cartCount>0&&<span className="badge">{cartCount}</span>}
+        </button>
+      </div>
+    </div>
+  </header>;
+}
+
+/* ─── TOP BAR ─── */
+function TopBar(){
+  const {setPage}=useApp();
+  return <div className="top-bar">
+    <div style={{fontSize:12,color:'var(--neutral-400)',display:'flex',gap:16}}>
+      <span onClick={()=>setPage({name:'about'})} style={{cursor:'pointer'}}>About Us</span>
+      <span>|</span>
+      <span onClick={()=>setPage({name:'contact'})} style={{cursor:'pointer'}}>Contact</span>
+    </div>
+    <div className="top-bar-center">
+      <span>🚚 Free shipping on orders over $99</span>
+      <span>|</span>
+      <span>✨ Use code <strong style={{color:'var(--gold-light)'}}>LUXE20</strong> for 20% off</span>
+    </div>
+    <div className="top-bar-right">
+      <span style={{cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>USD $</span>
+      <span>|</span>
+      <span style={{cursor:'pointer'}} onClick={()=>setPage({name:'login'})}>Sign In</span>
+    </div>
+  </div>;
+}
+
+/* ─── FOOTER ─── */
+function Footer(){
+  const {setPage}=useApp();
+  return <footer className="footer">
+    <div className="footer-inner">
+      <div className="footer-brand">
+        <span className="logo">LUXE<span style={{color:'var(--gold)'}}>HAIR</span></span>
+        <p className="footer-desc">Premium human hair wigs and extensions crafted for the discerning woman. Quality you can feel, style you can trust.</p>
+        <div className="footer-social">
+          {['IG','FB','TW','YT','TK'].map(s=><div key={s} className="social-icon"><span style={{fontSize:10,fontWeight:600,letterSpacing:'0.06em'}}>{s}</span></div>)}
+        </div>
+      </div>
+      <div>
+        <div className="footer-col-title">Shop</div>
+        <div className="footer-links">
+          {['Lace Front Wigs','360 Lace Wigs','Full Lace Wigs','Headband Wigs','Closures','Extensions','New Arrivals','Best Sellers'].map(l=><div key={l} className="footer-link" onClick={()=>setPage({name:'catalog',data:{cat:l}})}>{l}</div>)}
+        </div>
+      </div>
+      <div>
+        <div className="footer-col-title">Information</div>
+        <div className="footer-links">
+          {[['About Us','about'],['Contact Us','contact'],['Shipping Policy','shipping'],['Return Policy','returns'],['FAQ','faq'],['Size Guide','size-guide'],['Care Guide','care'],['Blog','blog']].map(([l,p])=><div key={l} className="footer-link" onClick={()=>setPage({name:p})}>{l}</div>)}
+        </div>
+      </div>
+      <div>
+        <div className="footer-col-title">My Account</div>
+        <div className="footer-links">
+          {[['Sign In','login'],['Register','register'],['Order History','account'],['Wishlist','wishlist'],['Track Order','track'],['Address Book','account']].map(([l,p])=><div key={l} className="footer-link" onClick={()=>setPage({name:p})}>{l}</div>)}
+        </div>
+      </div>
+    </div>
+    <div className="footer-bottom">
+      <span className="footer-bottom-left">© 2026 QUEENTHAIR. All rights reserved.</span>
+      <div className="footer-payment">
+        {['VISA','MC','AMEX','PAYPAL','STRIPE'].map(p=><div key={p} className="payment-icon">{p}</div>)}
+      </div>
+    </div>
+  </footer>;
+}
+
+/* ─── TRUST SECTION ─── */
+function TrustSection(){
+  return <div className="trust-section">
+    <div className="trust-grid">
+      {[{icon:<I.truck/>,title:'Free Shipping',sub:'On orders over $99 worldwide'},{icon:<I.refresh/>,title:'30-Day Returns',sub:'Hassle-free return policy'},{icon:<I.shield/>,title:'Secure Payment',sub:'256-bit SSL encryption'},{icon:<I.phone/>,title:'24/7 Support',sub:'Live chat & email support'}].map((t,i)=><div key={i} className="trust-item">
+        <div className="trust-icon">{t.icon}</div>
+        <div className="trust-title">{t.title}</div>
+        <div className="trust-sub">{t.sub}</div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+/* ─── HOME PAGE ─── */
+function HomePage(){
+  const {setPage,addToCart}=useApp();
+  const newArrivals=PRODUCTS.filter(p=>p.isNew||p.id<=8).slice(0,8);
+  const bestsellers=PRODUCTS.slice(8,16);
+  const onSale=PRODUCTS.filter(p=>p.isSale).slice(0,8);
+
+  return <div>
+    {/* HERO */}
+    <section className="hero">
+      <div className="hero-bg"/>
+      <div className="hero-content">
+        <div className="hero-eyebrow fade-in">2026 Luxury Collection</div>
+        <h1 className="hero-title fade-up">Elevate Your<br/><strong>Natural Beauty</strong><br/>With Premium Hair</h1>
+        <p className="hero-sub fade-up">Discover our handcrafted collection of human hair wigs and extensions. From silky straights to gorgeous curls — find your perfect style.</p>
+        <div className="hero-actions fade-up">
+          <button className="btn-primary" onClick={()=>setPage({name:'catalog'})}>Shop Collection <I.arrow/></button>
+          <button className="btn-outline" onClick={()=>setPage({name:'catalog',data:{cat:'New Arrivals'}})}>New Arrivals</button>
+        </div>
+      </div>
+      <div className="hero-stats">
+        {[{n:'50K+',l:'Happy Customers'},{n:'2000+',l:'Styles Available'},{n:'4.9★',l:'Average Rating'}].map((s,i)=><div key={i} className="stat-item"><div className="stat-num">{s.n}</div><div className="stat-label">{s.l}</div></div>)}
+      </div>
+    </section>
+
+    {/* PROMO BAR */}
+    <div className="promo-bar">
+      {[{icon:<I.truck/>,text:'Free Shipping on Orders $99+'},{icon:<I.shield/>,text:'100% Human Hair Guaranteed'},{icon:<I.refresh/>,text:'30-Day Easy Returns'},{icon:<I.phone/>,text:'24/7 Customer Support'}].map((p,i)=><div key={i} className="promo-item">{p.icon}<span>{p.text}</span></div>)}
+    </div>
+
+    {/* CATEGORIES */}
+    <section className="section">
+      <div className="section-inner">
+        <div className="section-header">
+          <div>
+            <div className="section-eyebrow">Browse By</div>
+            <div className="section-title">Shop Collections</div>
+          </div>
+          <div className="section-link" onClick={()=>setPage({name:'catalog'})}>View All <I.arrow/></div>
+        </div>
+        <div className="category-grid">
+          {CATEGORIES.map((cat,i)=><div key={cat.id} className="cat-card" onClick={()=>setPage({name:'catalog',data:{cat:cat.id}})}>
+            <Img seed={i+20} style={{width:'100%',minHeight:i<2?380:200}}/>
+            <div className="cat-overlay"/>
+            <div className="cat-info">
+              <div className="cat-name">{cat.name}</div>
+              <div className="cat-count">{cat.count} styles</div>
+              <div className="cat-btn">Shop Now <I.arrow/></div>
+            </div>
+          </div>)}
+        </div>
+      </div>
+    </section>
+
+    <TrustSection/>
+
+    {/* NEW ARRIVALS */}
+    <section className="section">
+      <div className="section-inner">
+        <div className="section-header">
+          <div>
+            <div className="section-eyebrow">Just In</div>
+            <div className="section-title">New Arrivals</div>
+          </div>
+          <div className="section-link" onClick={()=>setPage({name:'catalog',data:{filter:'new'}})}>View All <I.arrow/></div>
+        </div>
+        <div className="filter-tags">
+          {['All','Lace Front','360 Lace','Full Lace','Body Wave','Straight','Curly'].map((t,i)=><div key={i} className={`filter-tag${i===0?' active':''}`}>{t}</div>)}
+        </div>
+        <div className="product-grid">
+          {newArrivals.map(p=><ProductCard key={p.id} p={p}/>)}
+        </div>
+      </div>
+    </section>
+
+    {/* BANNER */}
+    <div className="banner-section">
+      <div className="banner-bg-pattern"/>
+      <div className="banner-inner">
+        <div className="banner-eyebrow">Limited Time Offer</div>
+        <div className="banner-title">Up to <em>50% Off</em> Premium Wigs</div>
+        <div className="banner-sub">Shop our seasonal sale — exceptional quality at unbeatable prices. Offer ends soon.</div>
+        <button className="btn-primary" onClick={()=>setPage({name:'catalog',data:{filter:'sale'}})}>Shop Sale Now <I.arrow/></button>
+      </div>
+    </div>
+
+    {/* BESTSELLERS */}
+    <section className="section">
+      <div className="section-inner">
+        <div className="section-header">
+          <div>
+            <div className="section-eyebrow">Customer Favorites</div>
+            <div className="section-title">Best Sellers</div>
+          </div>
+          <div className="section-link" onClick={()=>setPage({name:'catalog'})}>View All <I.arrow/></div>
+        </div>
+        <div className="product-grid">
+          {bestsellers.map(p=><ProductCard key={p.id} p={p}/>)}
+        </div>
+      </div>
+    </section>
+
+    {/* ON SALE */}
+    <section className="section" style={{background:'var(--neutral-100)',borderTop:'1px solid var(--border)',borderBottom:'1px solid var(--border)'}}>
+      <div className="section-inner">
+        <div className="section-header">
+          <div>
+            <div className="section-eyebrow">Save Big</div>
+            <div className="section-title">On Sale Now</div>
+          </div>
+          <div className="section-link" onClick={()=>setPage({name:'catalog',data:{filter:'sale'}})}>View All <I.arrow/></div>
+        </div>
+        <div className="product-grid">
+          {onSale.map(p=><ProductCard key={p.id} p={p}/>)}
+        </div>
+      </div>
+    </section>
+
+    {/* NEWSLETTER */}
+    <section style={{padding:'72px 0'}}>
+      <div className="banner-section">
+        <div className="banner-inner">
+          <div className="banner-eyebrow">Join the Community</div>
+          <div className="banner-title">Get <em>Exclusive</em> Style Updates</div>
+          <div className="banner-sub">Subscribe for early access to new arrivals, member-only discounts, and hair care tips from our experts.</div>
+          <div className="newsletter-form">
+            <input className="newsletter-input" placeholder="Your email address"/>
+            <button className="newsletter-btn">Subscribe</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>;
+}
+
+/* ─── CATALOG PAGE ─── */
+function CatalogPage({data={}}){
+  const {setPage}=useApp();
+  const [sort,setSort]=useState('featured');
+  const [view,setView]=useState('grid');
+  const [priceMax,setPriceMax]=useState(500);
+  const [selectedColors,setSelectedColors]=useState([]);
+  const [page,setPageNum]=useState(1);
+  const perPage=12;
+
+  let products=PRODUCTS;
+  if(data.filter==='sale') products=products.filter(p=>p.isSale);
+  if(data.filter==='new') products=products.filter(p=>p.isNew);
+  if(data.cat&&!['New Arrivals','Best Sellers'].includes(data.cat))
+    products=products.filter(p=>p.category===data.cat||p.name.toLowerCase().includes((data.cat||'').toLowerCase()));
+
+  products=products.filter(p=>p.price<=priceMax);
+  if(sort==='price-low') products=[...products].sort((a,b)=>a.price-b.price);
+  if(sort==='price-high') products=[...products].sort((a,b)=>b.price-a.price);
+  if(sort==='rating') products=[...products].sort((a,b)=>b.rating-a.rating);
+  if(sort==='reviews') products=[...products].sort((a,b)=>b.reviews-a.reviews);
+
+  const total=products.length;
+  const paged=products.slice((page-1)*perPage,page*perPage);
+  const totalPages=Math.ceil(total/perPage);
+
+  return <div>
+    <div className="page-banner">
+      <div className="page-banner-inner">
+        <div className="breadcrumb">
+          <span style={{cursor:'pointer'}} onClick={()=>setPage({name:'home'})}>Home</span>
+          <span className="breadcrumb-sep">›</span>
+          <span>{data.cat||'All Products'}</span>
+        </div>
+        <div className="page-banner-title">{data.cat||'All Products'}</div>
+        <div className="page-banner-sub">{total} styles available</div>
+      </div>
+    </div>
+    <div className="section-inner" style={{padding:'32px 40px'}}>
+      <div className="catalog-layout">
+        {/* FILTERS */}
+        <aside className="filter-sidebar">
+          <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:18,fontWeight:400,color:'var(--charcoal)',marginBottom:16,paddingBottom:12,borderBottom:'1px solid var(--border)'}}>Filters</div>
+          <div className="filter-section">
+            <div className="filter-title">Categories</div>
+            {CATEGORIES.map(c=><label key={c.id} className="filter-option">
+              <input type="checkbox"/><span className="filter-option-label">{c.name}</span><span className="filter-option-count">{c.count}</span>
+            </label>)}
+          </div>
+          <div className="filter-section">
+            <div className="filter-title">Price Range</div>
+            <div className="price-range">
+              <input type="range" className="price-slider" min="0" max="500" value={priceMax} onChange={e=>setPriceMax(+e.target.value)}/>
+              <div className="price-labels"><span>$0</span><span>${priceMax}</span></div>
+            </div>
+          </div>
+          <div className="filter-section">
+            <div className="filter-title">Hair Color</div>
+            <div className="color-swatches">
+              {Object.entries(COLORS).slice(0,8).map(([k,v])=><div key={k} className={`swatch${selectedColors.includes(k)?' active':''}`} style={{background:v.startsWith('#')?v:'linear-gradient(45deg,#111,#C19A6B)'}} title={k} onClick={()=>setSelectedColors(p=>p.includes(k)?p.filter(c=>c!==k):[...p,k])}/>)}
+            </div>
+          </div>
+          <div className="filter-section">
+            <div className="filter-title">Hair Length</div>
+            {['10"–12"','14"–16"','18"–20"','22"–24"','26"+'].map(l=><label key={l} className="filter-option">
+              <input type="checkbox"/><span className="filter-option-label">{l}</span>
+            </label>)}
+          </div>
+          <div className="filter-section">
+            <div className="filter-title">Lace Type</div>
+            {['HD Lace','Transparent Lace','Swiss Lace','Regular Lace'].map(l=><label key={l} className="filter-option">
+              <input type="checkbox"/><span className="filter-option-label">{l}</span>
+            </label>)}
+          </div>
+          <div className="filter-section">
+            <div className="filter-title">Density</div>
+            {['130%','150%','180%','200%'].map(d=><label key={d} className="filter-option">
+              <input type="checkbox"/><span className="filter-option-label">{d} Density</span>
+            </label>)}
+          </div>
+          <div className="filter-section">
+            <div className="filter-title">Availability</div>
+            <label className="filter-option"><input type="checkbox"/><span className="filter-option-label">In Stock Only</span></label>
+          </div>
+          <button className="btn-full" style={{marginTop:16}}>Apply Filters</button>
+        </aside>
+
+        {/* PRODUCTS */}
+        <div>
+          <div className="catalog-toolbar">
+            <span className="result-count">Showing {(page-1)*perPage+1}–{Math.min(page*perPage,total)} of {total} products</span>
+            <div className="toolbar-right">
+              <select className="sort-select" value={sort} onChange={e=>setSort(e.target.value)}>
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Top Rated</option>
+                <option value="reviews">Most Reviews</option>
+              </select>
+              <div className="view-toggle">
+                <div className={`view-btn${view==='grid'?' active':''}`} onClick={()=>setView('grid')}><I.grid/></div>
+                <div className={`view-btn${view==='list'?' active':''}`} onClick={()=>setView('list')}><I.list/></div>
+              </div>
+            </div>
+          </div>
+          <div className="product-grid">
+            {paged.map(p=><ProductCard key={p.id} p={p}/>)}
+          </div>
+          <div className="pagination">
+            <div className="page-btn" onClick={()=>setPageNum(p=>Math.max(1,p-1))}>‹</div>
+            {Array.from({length:Math.min(5,totalPages)},(_,i)=><div key={i} className={`page-btn${page===i+1?' active':''}`} onClick={()=>setPageNum(i+1)}>{i+1}</div>)}
+            <div className="page-btn" onClick={()=>setPageNum(p=>Math.min(totalPages,p+1))}>›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ─── PRODUCT DETAIL PAGE ─── */
+function ProductPage({data={}}){
+  const {addToCart,toggleWishlist,wishlist,setPage}=useApp();
+  const p=PRODUCTS.find(pr=>pr.id===data.id)||PRODUCTS[0];
+  const [activeImg,setActiveImg]=useState(0);
+  const [activeColor,setActiveColor]=useState(0);
+  const [activeLength,setActiveLength]=useState(2);
+  const [activeDensity,setActiveDensity]=useState(1);
+  const [qty,setQty]=useState(1);
+  const [tab,setTab]=useState('description');
+  const wishlisted=wishlist.includes(p.id);
+  const related=PRODUCTS.filter(pr=>pr.category===p.category&&pr.id!==p.id).slice(0,4);
+
+  return <div>
+    <div className="page-banner" style={{padding:'20px 40px'}}>
+      <div className="breadcrumb">
+        <span style={{cursor:'pointer'}} onClick={()=>setPage({name:'home'})}>Home</span>
+        <span className="breadcrumb-sep">›</span>
+        <span style={{cursor:'pointer'}} onClick={()=>setPage({name:'catalog',data:{cat:p.category}})}>Lace Front Wigs</span>
+        <span className="breadcrumb-sep">›</span>
+        <span style={{color:'var(--neutral-300)',maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</span>
+      </div>
+    </div>
+    <div className="pdp-layout">
+      {/* GALLERY */}
+      <div className="pdp-gallery">
+        <div className="gallery-main"><Img seed={p.id*10+activeImg}/></div>
+        <div className="gallery-thumbs">
+          {p.images.map((_,i)=><div key={i} className={`gallery-thumb${activeImg===i?' active':''}`} onClick={()=>setActiveImg(i)}>
+            <Img seed={p.id*10+i}/>
+          </div>)}
+        </div>
+      </div>
+
+      {/* INFO */}
+      <div>
+        <div className="pdp-brand">QUEENTHAIR Premium</div>
+        <h1 className="pdp-title">{p.name}</h1>
+        <div className="pdp-rating">
+          <Stars rating={parseFloat(p.rating)} size={13}/>
+          <span style={{fontSize:13,fontWeight:600,color:'var(--charcoal)'}}>{p.rating}</span>
+          <span style={{fontSize:13,color:'var(--text-muted)'}}>({p.reviews} reviews)</span>
+          <span style={{fontSize:12,color:'var(--gold)',marginLeft:8,cursor:'pointer'}}>Write a Review</span>
+        </div>
+        <div className="pdp-price">
+          <span className="pdp-price-current">${p.price}</span>
+          {p.originalPrice&&<><span className="pdp-price-original">${p.originalPrice}</span><span className="pdp-price-save">Save ${p.originalPrice-p.price}</span></>}
+        </div>
+
+        {/* COLOR */}
+        <div className="variant-section">
+          <div className="variant-label">Color: <span>{p.colors[activeColor]?.key}</span></div>
+          <div className="color-variants">
+            {p.colors.map((c,i)=><div key={i} className={`color-swatch-lg${activeColor===i?' active':''}`} style={{background:c.hex}} onClick={()=>setActiveColor(i)} title={c.key}/>)}
+          </div>
+        </div>
+
+        {/* LENGTH */}
+        <div className="variant-section">
+          <div className="variant-label">Length: <span>{p.lengths[activeLength]}</span></div>
+          <div className="size-variants">
+            {p.lengths.map((l,i)=><button key={i} className={`size-btn${activeLength===i?' active':''}`} onClick={()=>setActiveLength(i)}>{l}</button>)}
+          </div>
+        </div>
+
+        {/* DENSITY */}
+        <div className="variant-section">
+          <div className="variant-label">Density: <span>{p.density[activeDensity]}</span></div>
+          <div className="size-variants">
+            {p.density.map((d,i)=><button key={i} className={`size-btn${activeDensity===i?' active':''}`} onClick={()=>setActiveDensity(i)}>{d}</button>)}
+          </div>
+        </div>
+
+        {/* QTY + ADD */}
+        <div className="qty-section">
+          <div className="qty-control">
+            <div className="qty-btn" onClick={()=>setQty(q=>Math.max(1,q-1))}>−</div>
+            <div className="qty-val">{qty}</div>
+            <div className="qty-btn" onClick={()=>setQty(q=>q+1)}>+</div>
+          </div>
+          <button className="add-to-cart-btn" onClick={()=>addToCart(p,{length:p.lengths[activeLength],density:p.density[activeDensity],color:p.colors[activeColor]?.key})}>
+            <I.bag/> Add to Cart — ${p.price*qty}
+          </button>
+          <button className={`wishlist-btn-pdp${wishlisted?' active':''}`} onClick={()=>toggleWishlist(p.id)}>
+            <I.heart/>
+          </button>
+        </div>
+
+        {/* META */}
+        <div className="pdp-meta">
+          {[{icon:<I.truck/>,text:'Free shipping on this order'},{icon:<I.refresh/>,text:'30-day hassle-free returns'},{icon:<I.shield/>,text:'Secure checkout — 256-bit SSL'},{icon:<I.check/>,text:'100% human hair — authentic quality'}].map((m,i)=><div key={i} className="pdp-meta-row">{m.icon}<span>{m.text}</span></div>)}
+        </div>
+
+        {/* TABS */}
+        <div className="pdp-tabs">
+          <div className="tab-headers">
+            {['description','details','reviews','shipping'].map(t=><div key={t} className={`tab-btn${tab===t?' active':''}`} onClick={()=>setTab(t)}>{t.charAt(0).toUpperCase()+t.slice(1)}</div>)}
+          </div>
+          <div className="tab-content">
+            {tab==='description'&&<p>Experience the pinnacle of luxury hair with our {p.name}. Crafted from 100% virgin human hair, this premium wig features a meticulously constructed cap that ensures comfort and durability. Each strand is carefully selected for uniformity and natural movement, giving you the most authentic look possible. The lace front design creates a seamless, undetectable hairline that blends perfectly with your skin.</p>}
+            {tab==='details'&&<div>
+              {[['Hair Type','100% Virgin Human Hair'],['Cap Type','Lace Front / 13x4'],['Hair Texture','As shown'],['Length Options','10"–30" available'],['Density','130%–200%'],['Lace Type','Swiss Lace / HD Lace available'],['Cap Size','Average (adjustable)'],['Pre-Plucked','Yes'],['Baby Hair','Yes']].map(([k,v])=><div key={k} style={{display:'flex',gap:16,padding:'6px 0',borderBottom:'1px solid var(--border)',fontSize:13}}>
+                <span style={{minWidth:140,color:'var(--text-muted)',fontWeight:500}}>{k}</span><span style={{color:'var(--text-primary)'}}>{v}</span>
+              </div>)}
+            </div>}
+            {tab==='reviews'&&<div>
+              {[{name:'Sarah M.',rating:5,text:'Absolutely beautiful wig! The quality exceeded my expectations. Very natural looking and the lace blends perfectly.',date:'Nov 12, 2026'},{name:'Jennifer L.',rating:4,text:'Great wig, ships fast. The hair is silky and soft. Would definitely order again.',date:'Oct 28, 2026'},{name:'Aisha K.',rating:5,text:'This is my 3rd purchase from QUEENTHAIR and the quality is always consistent. Love this brand!',date:'Oct 15, 2026'}].map((r,i)=><div key={i} className="review-card">
+                <div className="review-header"><div><span className="reviewer">{r.name}</span><div style={{display:'flex',alignItems:'center',gap:8,marginTop:4}}><Stars rating={r.rating}/></div></div><span className="review-date">{r.date}</span></div>
+                <p className="review-text">{r.text}</p>
+                <div className="verified">✓ Verified Purchase</div>
+              </div>)}
+            </div>}
+            {tab==='shipping'&&<div>
+              <p><strong>Standard Shipping (5–7 business days):</strong> Free on orders $99+, otherwise $9.99</p>
+              <p style={{marginTop:8}}><strong>Express Shipping (2–3 business days):</strong> $19.99</p>
+              <p style={{marginTop:8}}><strong>Overnight Shipping:</strong> $29.99</p>
+              <p style={{marginTop:8}}>International orders ship via DHL Express. Delivery times vary by destination.</p>
+            </div>}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* RELATED */}
+    {related.length>0&&<div className="section" style={{borderTop:'1px solid var(--border)'}}>
+      <div className="section-inner">
+        <div className="section-header">
+          <div><div className="section-eyebrow">Similar Styles</div><div className="section-title">You May Also Like</div></div>
+          <div className="section-link" onClick={()=>setPage({name:'catalog',data:{cat:p.category}})}>View All <I.arrow/></div>
+        </div>
+        <div className="product-grid">{related.map(rp=><ProductCard key={rp.id} p={rp}/>)}</div>
+      </div>
+    </div>}
+  </div>;
+}
+
+/* ─── WISHLIST PAGE ─── */
+function WishlistPage(){
+  const {wishlist,setPage,addToCart,toggleWishlist}=useApp();
+  const items=PRODUCTS.filter(p=>wishlist.includes(p.id));
+  return <div>
+    <div className="page-banner"><div className="page-banner-inner">
+      <div className="breadcrumb"><span onClick={()=>setPage({name:'home'})} style={{cursor:'pointer'}}>Home</span><span className="breadcrumb-sep">›</span><span>Wishlist</span></div>
+      <div className="page-banner-title">My Wishlist</div>
+      <div className="page-banner-sub">{items.length} saved items</div>
+    </div></div>
+    <div className="section-inner" style={{padding:'40px'}}>
+      {items.length===0?<div style={{textAlign:'center',padding:'80px 0'}}>
+        <div style={{fontSize:48,marginBottom:16,opacity:0.3}}>♡</div>
+        <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:28,color:'var(--text-secondary)',marginBottom:8}}>Your wishlist is empty</div>
+        <p style={{fontSize:13,color:'var(--text-muted)',marginBottom:24}}>Save items you love to your wishlist</p>
+        <button className="btn-primary" onClick={()=>setPage({name:'catalog'})}>Browse Collection</button>
+      </div>:<>
+        <div className="product-grid">
+          {items.map(p=><ProductCard key={p.id} p={p}/>)}
+        </div>
+        <div style={{marginTop:32,display:'flex',gap:12}}>
+          <button className="btn-primary" onClick={()=>{items.forEach(p=>addToCart(p));}}>Add All to Cart</button>
+          <button style={{border:'1px solid var(--border)',padding:'12px 24px',borderRadius:'var(--radius)',fontSize:12,letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--text-secondary)',cursor:'pointer'}} onClick={()=>items.forEach(p=>toggleWishlist(p.id))}>Clear All</button>
+        </div>
+      </>}
+    </div>
+  </div>;
+}
+
+/* ─── CART PAGE ─── */
+function CartPageFull(){
+  const {cart,removeFromCart,updateQty,cartTotal,setPage}=useApp();
+  return <div>
+    <div className="page-banner"><div className="page-banner-inner">
+      <div className="breadcrumb"><span onClick={()=>setPage({name:'home'})} style={{cursor:'pointer'}}>Home</span><span className="breadcrumb-sep">›</span><span>Shopping Cart</span></div>
+      <div className="page-banner-title">Shopping Cart</div>
+    </div></div>
+    <div className="section-inner" style={{padding:'40px'}}>
+      {cart.length===0?<div style={{textAlign:'center',padding:'80px 0'}}>
+        <div style={{fontSize:48,marginBottom:16,opacity:0.3}}>🛍</div>
+        <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:28,color:'var(--text-secondary)',marginBottom:8}}>Your cart is empty</div>
+        <button className="btn-primary" style={{marginTop:16}} onClick={()=>setPage({name:'catalog'})}>Start Shopping</button>
+      </div>:<div className="cart-page-layout">
+        <div>
+          <div className="cart-table-header"><span>Product</span><span>Price</span><span>Quantity</span><span>Total</span></div>
+          {cart.map(item=><div key={item.key} style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr 1fr',gap:16,padding:'20px 0',borderBottom:'1px solid var(--border)',alignItems:'center'}}>
+            <div style={{display:'flex',gap:14,alignItems:'center'}}>
+              <Img seed={item.id} style={{width:72,height:90,borderRadius:'var(--radius)',flexShrink:0}}/>
+              <div>
+                <div style={{fontSize:14,fontWeight:500,color:'var(--charcoal)',marginBottom:4}}>{item.name}</div>
+                {item.opts.length&&<div style={{fontSize:12,color:'var(--text-muted)'}}>Length: {item.opts.length}</div>}
+                <div className="cart-item-remove" onClick={()=>removeFromCart(item.key)} style={{marginTop:6}}>Remove</div>
+              </div>
+            </div>
+            <div style={{fontSize:14,color:'var(--charcoal)'}}>${item.price}</div>
+            <div className="qty-control" style={{width:'fit-content'}}>
+              <div className="qty-btn" onClick={()=>updateQty(item.key,-1)}>−</div>
+              <div className="qty-val">{item.qty}</div>
+              <div className="qty-btn" onClick={()=>updateQty(item.key,1)}>+</div>
+            </div>
+            <div style={{fontSize:14,fontWeight:600,color:'var(--charcoal)'}}>${item.price*item.qty}</div>
+          </div>)}
+          <div style={{marginTop:20,display:'flex',alignItems:'center',gap:12}}>
+            <input className="form-input" placeholder="Coupon code" style={{maxWidth:200}}/>
+            <button className="coupon-btn">Apply Code</button>
+          </div>
+        </div>
+        <div>
+          <div className="order-summary-card">
+            <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:20,fontWeight:400,color:'var(--charcoal)',marginBottom:20}}>Order Summary</div>
+            <div className="cart-totals">
+              <div className="cart-total-row"><span>Subtotal ({cart.reduce((s,i)=>s+i.qty,0)} items)</span><span>${cartTotal.toFixed(2)}</span></div>
+              <div className="cart-total-row"><span>Shipping</span><span style={{color:'var(--gold)'}}>FREE</span></div>
+              <div className="cart-total-row"><span>Estimated Tax</span><span>${(cartTotal*0.08).toFixed(2)}</span></div>
+              <div className="cart-total-row total"><span>Total</span><span>${(cartTotal*1.08).toFixed(2)}</span></div>
+            </div>
+            <button className="checkout-btn" style={{marginTop:20}} onClick={()=>setPage({name:'checkout'})}>Proceed to Checkout</button>
+            <button className="continue-btn" style={{marginTop:8}} onClick={()=>setPage({name:'catalog'})}>Continue Shopping</button>
+            <div style={{display:'flex',gap:6,justifyContent:'center',marginTop:16,flexWrap:'wrap'}}>
+              {['VISA','MC','AMEX','PAYPAL'].map(p=><div key={p} className="payment-icon">{p}</div>)}
+            </div>
+          </div>
+        </div>
+      </div>}
+    </div>
+  </div>;
+}
+
+/* ─── CHECKOUT ─── */
+function CheckoutPage(){
+  const {cart,cartTotal,setPage}=useApp();
+  const [step,setStep]=useState(1);
+  const [form,setForm]=useState({email:'',first:'',last:'',address:'',city:'',zip:'',country:'US',phone:'',cardNum:'',cardExp:'',cardCvv:''});
+  const update=k=>e=>setForm(f=>({...f,[k]:e.target.value}));
+
+  return <div>
+    <div className="page-banner"><div className="page-banner-inner">
+      <div className="breadcrumb"><span onClick={()=>setPage({name:'home'})} style={{cursor:'pointer'}}>Home</span><span className="breadcrumb-sep">›</span><span onClick={()=>setPage({name:'cart'})} style={{cursor:'pointer'}}>Cart</span><span className="breadcrumb-sep">›</span><span>Checkout</span></div>
+      <div className="page-banner-title">Secure Checkout</div>
+    </div></div>
+    <div className="section-inner" style={{padding:'40px'}}>
+      <div className="checkout-steps" style={{marginBottom:32}}>
+        {['Information','Shipping','Payment'].map((s,i)=><React.Fragment key={i}>
+          <div className={`checkout-step${step===i+1?' active':''}${step>i+1?' done':''}`}>
+            <div className="step-num">{step>i+1?'✓':i+1}</div><span>{s}</span>
+          </div>
+          {i<2&&<div className="step-separator"/>}
+        </React.Fragment>)}
+      </div>
+
+      <div className="checkout-layout">
+        <div>
+          {step===1&&<div>
+            <div className="checkout-section-title">Contact Information</div>
+            <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={form.email} onChange={update('email')} placeholder="you@email.com"/></div>
+            <div className="checkout-section-title" style={{marginTop:28}}>Shipping Address</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">First Name</label><input className="form-input" value={form.first} onChange={update('first')} placeholder="Jane"/></div>
+              <div className="form-group"><label className="form-label">Last Name</label><input className="form-input" value={form.last} onChange={update('last')} placeholder="Smith"/></div>
+            </div>
+            <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={form.address} onChange={update('address')} placeholder="123 Main Street"/></div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">City</label><input className="form-input" value={form.city} onChange={update('city')} placeholder="New York"/></div>
+              <div className="form-group"><label className="form-label">ZIP Code</label><input className="form-input" value={form.zip} onChange={update('zip')} placeholder="10001"/></div>
+            </div>
+            <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={form.phone} onChange={update('phone')} placeholder="+1 (555) 000-0000"/></div>
+            <button className="btn-primary" style={{marginTop:20}} onClick={()=>setStep(2)}>Continue to Shipping <I.arrow/></button>
+          </div>}
+
+          {step===2&&<div>
+            <div className="checkout-section-title">Shipping Method</div>
+            {[{name:'Standard Shipping',time:'5–7 business days',price:'Free',active:true},{name:'Express Shipping',time:'2–3 business days',price:'$19.99'},{name:'Overnight',time:'Next business day',price:'$29.99'}].map((s,i)=><div key={i} style={{border:`1px solid ${s.active?'var(--gold)':'var(--border)'}`,borderRadius:'var(--radius)',padding:'16px 18px',marginBottom:10,cursor:'pointer',background:s.active?'rgba(176,155,114,0.05)':'white',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:16,height:16,borderRadius:'50%',border:`1.5px solid ${s.active?'var(--gold)':'var(--border)'}`,background:s.active?'var(--gold)':'transparent'}}/>
+                <div><div style={{fontSize:13,fontWeight:500,color:'var(--charcoal)'}}>{s.name}</div><div style={{fontSize:12,color:'var(--text-muted)'}}>{s.time}</div></div>
+              </div>
+              <span style={{fontSize:13,fontWeight:600,color:'var(--charcoal)'}}>{s.price}</span>
+            </div>)}
+            <div style={{display:'flex',gap:12,marginTop:20}}>
+              <button style={{border:'1px solid var(--border)',padding:'12px 20px',borderRadius:'var(--radius)',fontSize:12,letterSpacing:'0.1em',cursor:'pointer'}} onClick={()=>setStep(1)}>← Back</button>
+              <button className="btn-primary" onClick={()=>setStep(3)}>Continue to Payment <I.arrow/></button>
+            </div>
+          </div>}
+
+          {step===3&&<div>
+            <div className="checkout-section-title">Payment Information</div>
+            <div style={{background:'var(--neutral-100)',border:'1px solid var(--border)',borderRadius:'var(--radius)',padding:'14px 16px',marginBottom:20,fontSize:12,color:'var(--text-secondary)',display:'flex',alignItems:'center',gap:8}}><I.shield/> Your payment information is encrypted and secure</div>
+            <div className="form-group"><label className="form-label">Card Number</label><input className="form-input" value={form.cardNum} onChange={update('cardNum')} placeholder="1234 5678 9012 3456" maxLength={19}/></div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Expiry Date</label><input className="form-input" value={form.cardExp} onChange={update('cardExp')} placeholder="MM/YY"/></div>
+              <div className="form-group"><label className="form-label">CVV</label><input className="form-input" value={form.cardCvv} onChange={update('cardCvv')} placeholder="123" maxLength={4}/></div>
+            </div>
+            <div style={{display:'flex',gap:12,marginTop:20}}>
+              <button style={{border:'1px solid var(--border)',padding:'12px 20px',borderRadius:'var(--radius)',fontSize:12,cursor:'pointer'}} onClick={()=>setStep(2)}>← Back</button>
+              <button className="btn-primary" onClick={()=>setPage({name:'order-success'})}>Place Order — ${(cartTotal*1.08).toFixed(2)} <I.arrow/></button>
+            </div>
+          </div>}
+        </div>
+
+        {/* ORDER SUMMARY */}
+        <div className="order-summary-card">
+          <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:18,fontWeight:400,color:'var(--charcoal)',marginBottom:16,paddingBottom:12,borderBottom:'1px solid var(--border-dark)'}}>Order Summary</div>
+          {cart.length===0?<p style={{fontSize:13,color:'var(--text-muted)'}}>Cart is empty</p>:cart.map(item=><div key={item.key} className="order-item">
+            <div style={{position:'relative'}}><Img seed={item.id} style={{width:60,height:75,borderRadius:'var(--radius)'}}/><div className="order-item-qty">{item.qty}</div></div>
+            <div><div className="order-item-name">{item.name}</div><div className="order-item-variant">{item.opts.length&&`Length: ${item.opts.length}`}</div><div style={{fontSize:13,fontWeight:600,color:'var(--charcoal)',marginTop:4}}>${item.price*item.qty}</div></div>
+          </div>)}
+          <div className="coupon-row">
+            <input className="coupon-input" placeholder="Discount code"/>
+            <button className="coupon-btn">Apply</button>
+          </div>
+          <div className="cart-totals">
+            <div className="cart-total-row"><span>Subtotal</span><span>${cartTotal.toFixed(2)}</span></div>
+            <div className="cart-total-row"><span>Shipping</span><span style={{color:'var(--gold)'}}>Free</span></div>
+            <div className="cart-total-row"><span>Tax (8%)</span><span>${(cartTotal*0.08).toFixed(2)}</span></div>
+            <div className="cart-total-row total"><span>Total</span><span>${(cartTotal*1.08).toFixed(2)}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ─── ORDER SUCCESS ─── */
+function OrderSuccess(){
+  const {setPage}=useApp();
+  return <div style={{textAlign:'center',padding:'100px 40px'}}>
+    <div style={{width:72,height:72,background:'rgba(74,124,82,0.1)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px',fontSize:32}}>✓</div>
+    <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:36,fontWeight:400,color:'var(--charcoal)',marginBottom:8}}>Order Placed Successfully!</div>
+    <p style={{fontSize:14,color:'var(--text-muted)',marginBottom:6}}>Thank you for your purchase. Your order number is <strong style={{color:'var(--charcoal)'}}>#LH{Math.floor(Math.random()*90000+10000)}</strong></p>
+    <p style={{fontSize:13,color:'var(--text-muted)',marginBottom:32}}>A confirmation email has been sent to your inbox.</p>
+    <div style={{display:'flex',gap:14,justifyContent:'center'}}>
+      <button className="btn-primary" onClick={()=>setPage({name:'account'})}>View Order</button>
+      <button style={{border:'1px solid var(--border)',padding:'12px 24px',borderRadius:'var(--radius)',fontSize:12,letterSpacing:'0.1em',cursor:'pointer',color:'var(--text-secondary)'}} onClick={()=>setPage({name:'home'})}>Continue Shopping</button>
+    </div>
+  </div>;
+}
+
+/* ─── ACCOUNT ─── */
+function AccountPage(){
+  const {setPage}=useApp();
+  const [section,setSection]=useState('dashboard');
+  const orders=[
+    {id:'LH82341',date:'Nov 15, 2026',items:2,total:298,status:'delivered'},
+    {id:'LH79120',date:'Oct 22, 2026',items:1,total:149,status:'shipped'},
+    {id:'LH71083',date:'Sep 8, 2026',items:3,total:567,status:'delivered'},
+  ];
+
+  return <div>
+    <div className="page-banner"><div className="page-banner-inner">
+      <div className="breadcrumb"><span onClick={()=>setPage({name:'home'})} style={{cursor:'pointer'}}>Home</span><span className="breadcrumb-sep">›</span><span>My Account</span></div>
+      <div className="page-banner-title">My Account</div>
+    </div></div>
+    <div className="section-inner" style={{padding:'40px'}}>
+      <div className="account-layout">
+        <div className="account-nav">
+          {[{key:'dashboard',label:'Dashboard',icon:<I.user/>},{key:'orders',label:'Order History',icon:<I.bag/>},{key:'wishlist',label:'Wishlist',icon:<I.heart/>},{key:'addresses',label:'Addresses',icon:<I.map/>},{key:'profile',label:'Profile Settings',icon:<I.user/>}].map(n=><div key={n.key} className={`account-nav-item${section===n.key?' active':''}`} onClick={()=>{if(n.key==='wishlist')setPage({name:'wishlist'});else setSection(n.key)}}>
+            {n.icon}<span>{n.label}</span>
+          </div>)}
+          <div className="account-nav-item" onClick={()=>setPage({name:'login'})} style={{color:'#c0392b'}}>
+            <I.x/><span>Sign Out</span>
+          </div>
+        </div>
+        <div>
+          {section==='dashboard'&&<div>
+            <div className="account-card" style={{marginBottom:20}}>
+              <div className="account-card-title">Welcome back, Jane!</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
+                {[{n:orders.length,l:'Total Orders'},{n:'$1,014',l:'Total Spent'},{n:'3',l:'Wishlist Items'}].map((s,i)=><div key={i} style={{background:'var(--neutral-100)',borderRadius:'var(--radius)',padding:'16px',textAlign:'center'}}>
+                  <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:28,color:'var(--charcoal)',marginBottom:4}}>{s.n}</div>
+                  <div style={{fontSize:12,color:'var(--text-muted)'}}>{s.l}</div>
+                </div>)}
+              </div>
+            </div>
+            <div className="account-card">
+              <div className="account-card-title">Recent Orders</div>
+              <div className="order-row" style={{borderBottom:'1px solid var(--border)',paddingBottom:8,marginBottom:4,fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-muted)'}}>
+                <span>Order</span><span>Date</span><span>Total</span><span>Status</span>
+              </div>
+              {orders.map(o=><div key={o.id} className="order-row">
+                <span style={{fontWeight:500,color:'var(--gold)',cursor:'pointer'}}>#{o.id}</span>
+                <span style={{color:'var(--text-secondary)'}}>{o.date}</span>
+                <span style={{fontWeight:600,color:'var(--charcoal)'}}>${o.total}</span>
+                <span className={`status-badge status-${o.status}`}>{o.status}</span>
+              </div>)}
+            </div>
+          </div>}
+          {section==='orders'&&<div className="account-card">
+            <div className="account-card-title">Order History</div>
+            {orders.map(o=><div key={o.id} style={{border:'1px solid var(--border)',borderRadius:'var(--radius)',padding:'16px 20px',marginBottom:12}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+                <div><span style={{fontWeight:600,color:'var(--charcoal)'}}>Order #{o.id}</span><span style={{fontSize:12,color:'var(--text-muted)',marginLeft:12}}>{o.date}</span></div>
+                <span className={`status-badge status-${o.status}`}>{o.status}</span>
+              </div>
+              <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'var(--text-secondary)'}}>
+                <span>{o.items} item{o.items>1?'s':''}</span><span style={{fontWeight:600,color:'var(--charcoal)'}}>${o.total}</span>
+              </div>
+              <div style={{display:'flex',gap:8,marginTop:12}}>
+                <button style={{fontSize:12,padding:'7px 16px',border:'1px solid var(--border)',borderRadius:'var(--radius)',cursor:'pointer',color:'var(--text-secondary)'}}>View Details</button>
+                {o.status==='delivered'&&<button style={{fontSize:12,padding:'7px 16px',border:'1px solid var(--border)',borderRadius:'var(--radius)',cursor:'pointer',color:'var(--text-secondary)'}}>Reorder</button>}
+              </div>
+            </div>)}
+          </div>}
+          {section==='profile'&&<div className="account-card">
+            <div className="account-card-title">Profile Settings</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">First Name</label><input className="form-input" defaultValue="Jane"/></div>
+              <div className="form-group"><label className="form-label">Last Name</label><input className="form-input" defaultValue="Smith"/></div>
+            </div>
+            <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" defaultValue="jane.smith@email.com"/></div>
+            <div className="form-group"><label className="form-label">Phone</label><input className="form-input" defaultValue="+1 (555) 123-4567"/></div>
+            <div className="form-group"><label className="form-label">New Password</label><input className="form-input" type="password" placeholder="Leave blank to keep current"/></div>
+            <button className="btn-primary" style={{marginTop:8}}>Save Changes</button>
+          </div>}
+          {section==='addresses'&&<div className="account-card">
+            <div className="account-card-title">Saved Addresses</div>
+            <div style={{border:'1px solid var(--gold)',borderRadius:'var(--radius)',padding:'16px',marginBottom:12,position:'relative'}}>
+              <span style={{position:'absolute',top:12,right:12,fontSize:10,background:'rgba(176,155,114,0.1)',color:'var(--gold)',padding:'2px 8px',borderRadius:'var(--radius)',letterSpacing:'0.08em'}}>DEFAULT</span>
+              <div style={{fontSize:14,fontWeight:500,color:'var(--charcoal)',marginBottom:4}}>Jane Smith</div>
+              <div style={{fontSize:13,color:'var(--text-secondary)',lineHeight:1.6}}>123 Main Street<br/>New York, NY 10001<br/>United States</div>
+              <div style={{display:'flex',gap:8,marginTop:12}}>
+                <button style={{fontSize:12,padding:'6px 14px',border:'1px solid var(--border)',borderRadius:'var(--radius)',cursor:'pointer',color:'var(--text-secondary)'}}>Edit</button>
+                <button style={{fontSize:12,padding:'6px 14px',border:'1px solid var(--border)',borderRadius:'var(--radius)',cursor:'pointer',color:'var(--text-secondary)'}}>Delete</button>
+              </div>
+            </div>
+            <button style={{border:'1px dashed var(--border-dark)',borderRadius:'var(--radius)',padding:'14px',width:'100%',fontSize:13,color:'var(--text-muted)',cursor:'pointer',textAlign:'center'}}>+ Add New Address</button>
+          </div>}
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ─── AUTH ─── */
+function LoginPage(){
+  const {setPage}=useApp();
+  return <div>
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-title">Welcome Back</div>
+        <div className="auth-sub">Sign in to your QUEENTHAIR account</div>
+        <div className="form-group"><label className="form-label">Email Address</label><input className="form-input" type="email" placeholder="you@email.com"/></div>
+        <div className="form-group"><label className="form-label" style={{display:'flex',justifyContent:'space-between'}}><span>Password</span><span style={{color:'var(--gold)',cursor:'pointer',textTransform:'none',fontWeight:400}}>Forgot password?</span></label><input className="form-input" type="password" placeholder="••••••••"/></div>
+        <button className="btn-full" onClick={()=>setPage({name:'account'})}>Sign In</button>
+        <div className="auth-divider">or</div>
+        <div className="social-btn">Continue with Google</div>
+        <div className="social-btn">Continue with Facebook</div>
+        <div className="auth-switch">Don't have an account? <a onClick={()=>setPage({name:'register'})}>Create one</a></div>
+      </div>
+    </div>
+  </div>;
+}
+
+function RegisterPage(){
+  const {setPage}=useApp();
+  return <div>
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-title">Create Account</div>
+        <div className="auth-sub">Join QUEENTHAIR for exclusive benefits</div>
+        <div className="form-row">
+          <div className="form-group"><label className="form-label">First Name</label><input className="form-input" placeholder="Jane"/></div>
+          <div className="form-group"><label className="form-label">Last Name</label><input className="form-input" placeholder="Smith"/></div>
+        </div>
+        <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" placeholder="you@email.com"/></div>
+        <div className="form-group"><label className="form-label">Password</label><input className="form-input" type="password" placeholder="Min. 8 characters"/></div>
+        <div className="form-group"><label className="form-label">Confirm Password</label><input className="form-input" type="password" placeholder="Repeat password"/></div>
+        <label style={{display:'flex',alignItems:'flex-start',gap:10,fontSize:12,color:'var(--text-secondary)',margin:'12px 0',cursor:'pointer'}}>
+          <input type="checkbox" style={{marginTop:2,accentColor:'var(--gold)'}}/>
+          <span>I agree to the <span style={{color:'var(--gold)'}}>Terms of Service</span> and <span style={{color:'var(--gold)'}}>Privacy Policy</span></span>
+        </label>
+        <button className="btn-full" onClick={()=>setPage({name:'account'})}>Create Account</button>
+        <div className="auth-switch">Already have an account? <a onClick={()=>setPage({name:'login'})}>Sign in</a></div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ─── INFO PAGES ─── */
+function InfoPage({title,content}){
+  const {setPage}=useApp();
+  return <div>
+    <div className="page-banner"><div className="page-banner-inner">
+      <div className="breadcrumb"><span onClick={()=>setPage({name:'home'})} style={{cursor:'pointer'}}>Home</span><span className="breadcrumb-sep">›</span><span>{title}</span></div>
+      <div className="page-banner-title">{title}</div>
+    </div></div>
+    <div className="info-page">{content}</div>
+  </div>;
+}
+
+function AboutPage(){
+  return <InfoPage title="About Us" content={<>
+    <p className="info-sub">Founded with a passion for premium hair, QUEENTHAIR has been serving discerning customers since 2015.</p>
+    <h2 className="info-h2">Our Story</h2>
+    <p className="info-p">QUEENTHAIR was born from a simple belief: every woman deserves access to premium-quality hair that enhances her natural beauty and confidence. What started as a small boutique operation has grown into a globally recognized brand trusted by thousands of satisfied customers worldwide.</p>
+    <p className="info-p">We partner directly with skilled craftspeople and source only the finest virgin human hair, ensuring every product meets our exacting standards before reaching your hands.</p>
+    <h2 className="info-h2">Our Promise</h2>
+    <ul className="info-ul">
+      <li>100% authentic human hair — no synthetics, no compromise</li>
+      <li>Ethically sourced from verified suppliers</li>
+      <li>Rigorously quality-tested before shipping</li>
+      <li>Dedicated customer support team</li>
+      <li>Continuous innovation in wig construction and design</li>
+    </ul>
+    <h2 className="info-h2">Quality Standards</h2>
+    <p className="info-p">Every wig and extension in our collection undergoes a 12-point quality inspection process. We test for hair strength, cuticle alignment, color consistency, cap construction durability, and natural movement before any product earns the QUEENTHAIR seal of approval.</p>
+  </>}/>;
+}
+
+function ShippingPage(){
+  return <InfoPage title="Shipping Policy" content={<>
+    <p className="info-sub">We ship worldwide with fast, reliable delivery options.</p>
+    <h2 className="info-h2">Domestic Shipping (USA)</h2>
+    <ul className="info-ul">
+      <li><strong>Standard Shipping (5–7 business days):</strong> Free on orders $99+, $9.99 otherwise</li>
+      <li><strong>Express Shipping (2–3 business days):</strong> $19.99</li>
+      <li><strong>Overnight Shipping (next business day):</strong> $29.99</li>
+    </ul>
+    <h2 className="info-h2">International Shipping</h2>
+    <p className="info-p">We ship to over 120 countries worldwide via DHL Express. International delivery typically takes 7–14 business days. Shipping costs are calculated at checkout based on destination and package weight.</p>
+    <h2 className="info-h2">Processing Time</h2>
+    <p className="info-p">Orders are processed within 1–2 business days. Custom orders may require 3–5 additional business days. You will receive a tracking number via email once your order ships.</p>
+    <h2 className="info-h2">Customs & Duties</h2>
+    <p className="info-p">International customers are responsible for any customs fees, taxes, or import duties assessed by their country's customs authority. These charges are not included in our shipping fees.</p>
+  </>}/>;
+}
+
+function ReturnsPage(){
+  return <InfoPage title="Return Policy" content={<>
+    <p className="info-sub">We stand behind the quality of our products with a 30-day return guarantee.</p>
+    <h2 className="info-h2">Return Eligibility</h2>
+    <p className="info-p">Items may be returned within 30 days of delivery provided they are in original, unworn, and unaltered condition. Items must be returned in their original packaging with all tags attached.</p>
+    <h2 className="info-h2">Non-Returnable Items</h2>
+    <ul className="info-ul">
+      <li>Items that have been worn, altered, or washed</li>
+      <li>Custom or personalized orders</li>
+      <li>Sale items marked as final sale</li>
+      <li>Accessories (caps, combs, adhesives)</li>
+    </ul>
+    <h2 className="info-h2">Return Process</h2>
+    <ul className="info-ul">
+      <li>Contact our support team to initiate a return</li>
+      <li>Receive your prepaid return shipping label (US only)</li>
+      <li>Package items securely and drop off at any carrier location</li>
+      <li>Refund processed within 5–7 business days of receipt</li>
+    </ul>
+  </>}/>;
+}
+
+function FAQPage(){
+  const faqs=[
+    {q:'Are your wigs made with real human hair?',a:'Yes. All QUEENTHAIR wigs and extensions are made with 100% virgin human hair, sourced ethically from verified suppliers.'},
+    {q:'How do I choose the right wig size?',a:'Most of our wigs come in an average cap size (22–22.5" circumference) with adjustable straps. We recommend measuring your head and consulting our size guide for the best fit.'},
+    {q:'Can I color or bleach my QUEENTHAIR wig?',a:'Yes. Since our wigs are made from real human hair, they can be colored, bleached, and heat-styled just like your natural hair. We recommend consulting a professional stylist for chemical treatments.'},
+    {q:'How long does a QUEENTHAIR wig last?',a:'With proper care and maintenance, our wigs can last 1–3 years or longer. Daily wear wigs may have a shorter lifespan than wigs worn occasionally.'},
+    {q:'What is your return policy?',a:'We offer 30-day returns on unworn, unaltered items in their original condition. See our full Return Policy for details.'},
+    {q:'How do I care for my wig?',a:'We recommend washing with sulfate-free shampoo every 8–12 wears, conditioning regularly, and storing on a wig stand when not in use. Detailed care instructions are included with every order.'},
+  ];
+  return <InfoPage title="Frequently Asked Questions" content={<>
+    <p className="info-sub">Find answers to our most commonly asked questions below.</p>
+    {faqs.map((f,i)=><div key={i} style={{borderBottom:'1px solid var(--border)',paddingBottom:16,marginBottom:16}}>
+      <h3 style={{fontFamily:'Cormorant Garamond,serif',fontSize:18,fontWeight:400,color:'var(--charcoal)',marginBottom:8}}>{f.q}</h3>
+      <p className="info-p" style={{marginBottom:0}}>{f.a}</p>
+    </div>)}
+  </>}/>;
+}
+
+function ContactPage(){
+  return <InfoPage title="Contact Us" content={<>
+    <p className="info-sub">Our support team is available 24/7 to help you.</p>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:32}}>
+      {[{icon:'📧',title:'Email',sub:'support@Queenthair.com',detail:'Response within 2 hours'},{icon:'💬',title:'Live Chat',sub:'Available 24/7',detail:'Average response: 2 minutes'},{icon:'📱',title:'Phone',sub:'+1 (800) 555-LUXE',detail:'Mon–Fri, 9AM–6PM EST'},{icon:'📍',title:'Headquarters',sub:'New York, NY 10001',detail:'United States'}].map((c,i)=><div key={i} style={{background:'var(--neutral-100)',border:'1px solid var(--border)',borderRadius:'var(--radius)',padding:'20px',textAlign:'center'}}>
+        <div style={{fontSize:28,marginBottom:8}}>{c.icon}</div>
+        <div style={{fontWeight:600,color:'var(--charcoal)',marginBottom:4}}>{c.title}</div>
+        <div style={{fontSize:13,color:'var(--gold)'}}>{c.sub}</div>
+        <div style={{fontSize:12,color:'var(--text-muted)',marginTop:4}}>{c.detail}</div>
+      </div>)}
+    </div>
+    <h2 className="info-h2">Send Us a Message</h2>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+      <div className="form-group"><label className="form-label">Name</label><input className="form-input" placeholder="Your name"/></div>
+      <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" placeholder="you@email.com"/></div>
+    </div>
+    <div className="form-group"><label className="form-label">Order Number (optional)</label><input className="form-input" placeholder="#LH00000"/></div>
+    <div className="form-group"><label className="form-label">Message</label><textarea className="form-input" rows={5} placeholder="How can we help you?" style={{resize:'vertical'}}/></div>
+    <button className="btn-primary">Send Message</button>
+  </>}/>;
+}
+
+/* ─── ROUTER ─── */
+function Router(){
+  const {page}=useApp();
+  const {name,data={}}=page;
+  const pages={
+    home:<HomePage/>,
+    catalog:<CatalogPage data={data}/>,
+    product:<ProductPage data={data}/>,
+    wishlist:<WishlistPage/>,
+    cart:<CartPageFull/>,
+    checkout:<CheckoutPage/>,
+    'order-success':<OrderSuccess/>,
+    account:<AccountPage/>,
+    login:<LoginPage/>,
+    register:<RegisterPage/>,
+    about:<AboutPage/>,
+    shipping:<ShippingPage/>,
+    returns:<ReturnsPage/>,
+    faq:<FAQPage/>,
+    contact:<ContactPage/>,
+  };
+  return pages[name]||<HomePage/>;
+}
+
+/* ─── APP ─── */
+function App(){
+  const {page}=useApp();
+  const isFullBleed=['home','login','register','order-success'].includes(page.name);
+  useEffect(()=>{window.scrollTo({top:0,behavior:'smooth'});},[page.name]);
+  return <div className="page-wrap">
+    <TopBar/>
+    <Header/>
+    <main>
+      <Router/>
+    </main>
+    {!isFullBleed&&<TrustSection/>}
+    <Footer/>
+    <CartDrawer/>
+    <SearchOverlay/>
+    <Toast/>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <AppProvider><App/></AppProvider>
+);
+</script>
+</body>
+</html>

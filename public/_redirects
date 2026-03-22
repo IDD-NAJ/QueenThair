@@ -1,0 +1,2 @@
+# Netlify SPA fallback - ensures all routes work on refresh
+/*    /index.html   200

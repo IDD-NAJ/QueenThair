@@ -1,0 +1,53 @@
+{
+  "name": "QUEENTHAIR-ecommerce",
+  "version": "1.0.0",
+  "description": "Premium Hair E-commerce Website",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "build:check": "node scripts/build-check.js",
+    "build:safe": "npm run build:check && npm run build",
+    "start": "npm run dev",
+    "type-check": "echo 'TypeScript not configured - skipping type check'",
+    "test:products": "vitest run tests/api/products.test.js",
+    "clean": "rm -rf dist node_modules/.vite",
+    "deploy:preview": "npm run build:safe && npm run preview"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.3.3",
+    "@stripe/stripe-js": "^3.5.0",
+    "@supabase/supabase-js": "^2.99.2",
+    "clsx": "^2.0.0",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.3.1",
+    "framer-motion": "^10.16.16",
+    "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.49.2",
+    "react-router-dom": "^6.20.0",
+    "recharts": "^3.8.0",
+    "tailwind-merge": "^2.2.0",
+    "zod": "^3.22.4",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "colors": "^1.4.0",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.32",
+    "supabase": "^2.82.0",
+    "tailwindcss": "^3.3.6",
+    "vite": "^5.0.8",
+    "vitest": "^1.6.0"
+  }
+}
