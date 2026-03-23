@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Package, DollarSign, Heart, ShoppingBag, ChevronRight } from 'lucide-react';
@@ -16,35 +16,39 @@ export default function DashboardOverview() {
   const user = useStore(state => state.user);
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState({ orders: true, wishlist: true });
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadDashboardData();
+  const loadDashboardData = useCallback(() => {
+    if (!user) return;
+    setError(null);
+    setPending({ orders: true, wishlist: true });
+
+    getUserOrders(user.id, { limit: 5 })
+      .then((res) => setOrders(res.orders || []))
+      .catch((err) => {
+        setError(err.message);
+        setOrders([]);
+      })
+      .finally(() => setPending((p) => ({ ...p, orders: false })));
+
+    getWishlist(user.id)
+      .then((list) => setWishlist(list || []))
+      .catch(() => setWishlist([]))
+      .finally(() => setPending((p) => ({ ...p, wishlist: false })));
   }, [user]);
 
-  const loadDashboardData = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const [ordersResult, wishlistResult] = await Promise.all([
-        getUserOrders(user.id, { limit: 5 }),
-        getWishlist(user.id)
-      ]);
-      
-      setOrders(ordersResult.orders || []);
-      setWishlist(wishlistResult || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!user) {
+      setPending({ orders: false, wishlist: false });
+      return;
     }
-  };
+    loadDashboardData();
+  }, [user, loadDashboardData]);
 
-  if (loading) {
+  const statsLoading = pending.orders || pending.wishlist;
+
+  if (!user) {
     return <LoadingState message="Loading your dashboard..." />;
   }
 
@@ -63,32 +67,44 @@ export default function DashboardOverview() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          icon={Package}
-          label="Total Orders"
-          value={orders.length}
-          color="purple"
-        />
-        <StatCard
-          icon={ShoppingBag}
-          label="Pending Orders"
-          value={pendingOrders}
-          color="orange"
-        />
-        <StatCard
-          icon={DollarSign}
-          label="Total Spent"
-          value={`$${totalSpent.toFixed(2)}`}
-          color="green"
-        />
-        <StatCard
-          icon={Heart}
-          label="Wishlist Items"
-          value={wishlist.length}
-          color="red"
-        />
-      </div>
+      {statsLoading ? (
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          aria-busy="true"
+          aria-label="Loading stats"
+        >
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-28 rounded-lg bg-gray-100 animate-pulse motion-reduce:animate-none" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            icon={Package}
+            label="Total Orders"
+            value={orders.length}
+            color="purple"
+          />
+          <StatCard
+            icon={ShoppingBag}
+            label="Pending Orders"
+            value={pendingOrders}
+            color="orange"
+          />
+          <StatCard
+            icon={DollarSign}
+            label="Total Spent"
+            value={`$${totalSpent.toFixed(2)}`}
+            color="green"
+          />
+          <StatCard
+            icon={Heart}
+            label="Wishlist Items"
+            value={wishlist.length}
+            color="red"
+          />
+        </div>
+      )}
 
       {/* Recent Orders */}
       <div className="bg-white rounded-lg border border-gray-200">
@@ -103,7 +119,13 @@ export default function DashboardOverview() {
           </button>
         </div>
         
-        {orders.length === 0 ? (
+        {pending.orders && orders.length === 0 ? (
+          <div className="p-6 space-y-4" aria-busy="true" aria-label="Loading orders">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 rounded-md bg-gray-100 animate-pulse motion-reduce:animate-none" />
+            ))}
+          </div>
+        ) : orders.length === 0 ? (
           <EmptyState
             icon={Package}
             title="No orders yet"
@@ -164,7 +186,9 @@ export default function DashboardOverview() {
         >
           <Heart className="w-8 h-8 text-red-600 mb-3" />
           <h3 className="font-semibold text-gray-900 mb-1">My Wishlist</h3>
-          <p className="text-sm text-gray-600">{wishlist.length} items saved</p>
+          <p className="text-sm text-gray-600">
+            {pending.wishlist ? '…' : `${wishlist.length} items saved`}
+          </p>
         </button>
 
         <button

@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Truck, Shield, RefreshCw, Phone, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import { fadeInUp, staggerContainer, staggerItem, scaleIn } from '../utils/animations';
+import { staggerContainer } from '../utils/animations';
 import { getProducts } from '../services/productService';
 import { getCategories } from '../services/categoryService';
 import { getHomepageCategoryShowcase } from '../services/homepageShowcaseService';
 import { getActiveAnnouncements } from '../services/announcementService';
-import { getCollections } from '../services/collectionService';
 import { subscribeToNewsletter } from '../services/newsletterService';
 import { newsletterSchema } from '../lib/validators/newsletterSchema';
 import ProductCard from '../components/product/ProductCard';
@@ -17,6 +16,7 @@ import SectionHeader from '../components/common/SectionHeader';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Img from '../components/common/Img';
+import SectionGridSkeleton from '../components/common/SectionGridSkeleton';
 import useStore from '../store/useStore';
 import { resolveShowcaseTileMedia, isLikelyHttpUrl } from '../utils/categoryShowcase';
 
@@ -34,10 +34,8 @@ function HomepageCategoryTile({ to, title, description, imageUrl, videoUrl }) {
 
   return (
     <motion.div
-      variants={scaleIn}
-      initial="initial"
-      whileInView="animate"
-      viewport={{ once: true, margin: "-50px" }}
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
     >
       <Link
@@ -92,8 +90,16 @@ export default function HomePage() {
   const [categories, setCategories] = useState([]);
   const [categoryShowcase, setCategoryShowcase] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [visibleSections, setVisibleSections] = useState(new Set());
+  /** Each section resolves independently so slow APIs do not block the whole page */
+  const [pending, setPending] = useState({
+    newArrivals: true,
+    bestsellers: true,
+    featured: true,
+    onSale: true,
+    categories: true,
+    announcements: true,
+    showcase: true,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
@@ -124,49 +130,42 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    async function loadHomeData() {
-      try {
-        const [newArrivalsData, bestsellersData, featuredData, onSaleData, categoriesData, announcementsData, showcaseData] =
-          await Promise.all([
-            getProducts({ newArrival: true, limit: 8 }),
-            getProducts({ bestSeller: true, limit: 8 }),
-            getProducts({ featured: true, limit: 8 }),
-            getProducts({ onSale: true, limit: 8 }),
-            getCategories(),
-            getActiveAnnouncements(),
-            getHomepageCategoryShowcase().catch(() => null)
-          ]);
+    const done = (key) => () => setPending((p) => ({ ...p, [key]: false }));
 
-        setNewArrivals(newArrivalsData.products || []);
-        setBestsellers(bestsellersData.products || []);
-        setFeatured(featuredData.products || []);
-        setOnSale(onSaleData.products || []);
-        setCategories(categoriesData || []);
-        setAnnouncements(announcementsData || []);
-        setCategoryShowcase(showcaseData);
-        
-        console.log('HomePage data loaded:', {
-          newArrivals: newArrivalsData.products?.length || 0,
-          bestsellers: bestsellersData.products?.length || 0,
-          featured: featuredData.products?.length || 0,
-          onSale: onSaleData.products?.length || 0,
-          categories: categoriesData?.length || 0,
-          announcements: announcementsData?.length || 0,
-          categoryShowcase: showcaseData
-            ? {
-                items: (showcaseData.items || []).length,
-                section_active: showcaseData.section_active,
-              }
-            : null,
-        });
-      } catch (error) {
-        console.error('Failed to load home page data:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+    getProducts({ newArrival: true, limit: 8 })
+      .then((r) => setNewArrivals(r.products || []))
+      .catch(() => setNewArrivals([]))
+      .finally(done('newArrivals'));
 
-    loadHomeData();
+    getProducts({ bestSeller: true, limit: 8 })
+      .then((r) => setBestsellers(r.products || []))
+      .catch(() => setBestsellers([]))
+      .finally(done('bestsellers'));
+
+    getProducts({ featured: true, limit: 8 })
+      .then((r) => setFeatured(r.products || []))
+      .catch(() => setFeatured([]))
+      .finally(done('featured'));
+
+    getProducts({ onSale: true, limit: 8 })
+      .then((r) => setOnSale(r.products || []))
+      .catch(() => setOnSale([]))
+      .finally(done('onSale'));
+
+    getCategories()
+      .then((r) => setCategories(r || []))
+      .catch(() => setCategories([]))
+      .finally(done('categories'));
+
+    getActiveAnnouncements()
+      .then((r) => setAnnouncements(r || []))
+      .catch(() => setAnnouncements([]))
+      .finally(done('announcements'));
+
+    getHomepageCategoryShowcase()
+      .then((data) => setCategoryShowcase(data))
+      .catch(() => setCategoryShowcase(null))
+      .finally(done('showcase'));
   }, []);
 
   // Auto-switch hero videos
@@ -213,34 +212,6 @@ export default function HomePage() {
     };
   }, []);
 
-  // IntersectionObserver for section reveal — replaces getBoundingClientRect on scroll
-  useEffect(() => {
-    const sectionIds = ['promo-bar', 'categories', 'new-arrivals', 'bestsellers', 'featured', 'on-sale', 'newsletter'];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setVisibleSections(prev => {
-              if (prev.has(entry.target.id)) return prev; // no change
-              const next = new Set(prev);
-              next.add(entry.target.id);
-              return next;
-            });
-            observer.unobserve(entry.target); // once revealed, stop watching
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -10% 0px' }
-    );
-
-    sectionIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
   const handleNewsletterSubmit = async (data) => {
     if (isSubmitting) return;
 
@@ -268,6 +239,11 @@ export default function HomePage() {
     }
   };
 
+  const showcaseItems = (categoryShowcase?.items || []).filter((i) => i.active !== false);
+  const hasCustomShowcase = showcaseItems.length > 0;
+  const showCategorySkeleton =
+    pending.showcase || (!hasCustomShowcase && pending.categories);
+
   return (
     <div>
       {/* HERO */}
@@ -287,6 +263,7 @@ export default function HomePage() {
                 muted
                 loop
                 playsInline
+                preload={index === 0 ? 'metadata' : 'none'}
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
                   index === currentVideoIndex ? 'opacity-100' : 'opacity-0'
                 }`}
@@ -379,8 +356,8 @@ export default function HomePage() {
       </motion.section>
 
       {/* PROMO BAR */}
-      {announcements.length > 0 && (
-        <motion.div 
+      {(pending.announcements && announcements.length === 0) || announcements.length > 0 ? (
+        <motion.div
           id="promo-bar"
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -389,25 +366,35 @@ export default function HomePage() {
           className="bg-neutral-100 border-b border-border"
         >
           <div className="max-w-8xl mx-auto px-4 overflow-x-auto">
-            <div className="flex items-center justify-center gap-6 sm:gap-8 py-3 min-w-max">
-              {announcements.map((announcement) => (
-                <div key={announcement.id} className="flex items-center gap-2 text-xs text-text-secondary tracking-wider whitespace-nowrap">
-                  {announcement.icon && (
-                    <span className="text-gold">{announcement.icon}</span>
-                  )}
-                  {announcement.link ? (
-                    <Link to={announcement.link} className="hidden sm:inline hover:text-charcoal transition-colors">
-                      {announcement.title}
-                    </Link>
-                  ) : (
-                    <span className="hidden sm:inline">{announcement.title}</span>
-                  )}
-                </div>
-              ))}
-            </div>
+            {pending.announcements && announcements.length === 0 ? (
+              <div
+                className="flex items-center justify-center py-3"
+                aria-busy="true"
+                aria-label="Loading announcements"
+              >
+                <div className="h-3 w-48 max-w-[70vw] rounded bg-neutral-200/90 animate-pulse motion-reduce:animate-none" />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-6 sm:gap-8 py-3 min-w-max">
+                {announcements.map((announcement) => (
+                  <div key={announcement.id} className="flex items-center gap-2 text-xs text-text-secondary tracking-wider whitespace-nowrap">
+                    {announcement.icon && (
+                      <span className="text-gold">{announcement.icon}</span>
+                    )}
+                    {announcement.link ? (
+                      <Link to={announcement.link} className="hidden sm:inline hover:text-charcoal transition-colors">
+                        {announcement.title}
+                      </Link>
+                    ) : (
+                      <span className="hidden sm:inline">{announcement.title}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
-      )}
+      ) : null}
 
       {/* CATEGORIES — optional CMS via admin_settings (see Admin → Homepage categories) */}
       {(() => {
@@ -439,50 +426,54 @@ export default function HomePage() {
           >
             <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
               <SectionHeader title={headerTitle} subtitle={headerSubtitle} />
-              <motion.div 
-                variants={staggerContainer}
-                initial="initial"
-                whileInView="animate"
-                viewport={{ once: true, margin: "-50px" }}
-                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
-              >
-                {useCustom
-                  ? customCards.map((item) => {
-                      const { imageUrl, videoUrl } = resolveShowcaseTileMedia(item, categories);
-                      return (
+              {showCategorySkeleton ? (
+                <SectionGridSkeleton variant="category" count={8} />
+              ) : (
+                <motion.div
+                  variants={staggerContainer}
+                  initial="initial"
+                  whileInView="animate"
+                  viewport={{ once: true, margin: '-50px' }}
+                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
+                >
+                  {useCustom
+                    ? customCards.map((item) => {
+                        const { imageUrl, videoUrl } = resolveShowcaseTileMedia(item, categories);
+                        return (
+                          <HomepageCategoryTile
+                            key={item.id}
+                            to={item.href || '/shop'}
+                            title={item.title || 'Category'}
+                            description={item.description}
+                            imageUrl={imageUrl}
+                            videoUrl={videoUrl}
+                          />
+                        );
+                      })
+                    : categories.slice(0, 8).map((cat) => (
                         <HomepageCategoryTile
-                          key={item.id}
-                          to={item.href || '/shop'}
-                          title={item.title || 'Category'}
-                          description={item.description}
-                          imageUrl={imageUrl}
-                          videoUrl={videoUrl}
+                          key={cat.id}
+                          to={`/shop/${cat.slug}`}
+                          title={cat.name}
+                          description={cat.description}
+                          imageUrl={cat.image_url?.trim() || ''}
+                          videoUrl=""
                         />
-                      );
-                    })
-                  : categories.slice(0, 8).map((cat) => (
-                      <HomepageCategoryTile
-                        key={cat.id}
-                        to={`/shop/${cat.slug}`}
-                        title={cat.name}
-                        description={cat.description}
-                        imageUrl={cat.image_url?.trim() || ''}
-                        videoUrl=""
-                      />
-                    ))}
-              </motion.div>
+                      ))}
+                </motion.div>
+              )}
             </div>
           </motion.section>
         );
       })()}
 
       {/* NEW ARRIVALS */}
-      {newArrivals.length > 0 && (
-        <motion.section 
+      {((pending.newArrivals && newArrivals.length === 0) || newArrivals.length > 0) && (
+        <motion.section
           id="new-arrivals"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
           className="py-12 sm:py-16 lg:py-20 bg-warm-white"
         >
@@ -492,28 +483,32 @@ export default function HomePage() {
               subtitle="Latest additions to our collection"
               action={{ label: 'View All', href: '/collections/new-arrivals' }}
             />
-            <motion.div 
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, margin: "-50px" }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
-            >
-              {newArrivals.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </motion.div>
+            {pending.newArrivals && newArrivals.length === 0 ? (
+              <SectionGridSkeleton variant="product" count={8} />
+            ) : (
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true, margin: '-50px' }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
+              >
+                {newArrivals.map((product) => (
+                  <ProductCard key={product.id} product={product} revealOnMount />
+                ))}
+              </motion.div>
+            )}
           </div>
         </motion.section>
       )}
 
       {/* BESTSELLERS */}
-      {bestsellers.length > 0 && (
-        <motion.section 
+      {((pending.bestsellers && bestsellers.length === 0) || bestsellers.length > 0) && (
+        <motion.section
           id="bestsellers"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
           className="py-12 sm:py-16 lg:py-20"
         >
@@ -523,28 +518,32 @@ export default function HomePage() {
               subtitle="Customer favorites"
               action={{ label: 'View All', href: '/collections/best-sellers' }}
             />
-            <motion.div 
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, margin: "-50px" }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
-            >
-              {bestsellers.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </motion.div>
+            {pending.bestsellers && bestsellers.length === 0 ? (
+              <SectionGridSkeleton variant="product" count={8} />
+            ) : (
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true, margin: '-50px' }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
+              >
+                {bestsellers.map((product) => (
+                  <ProductCard key={product.id} product={product} revealOnMount />
+                ))}
+              </motion.div>
+            )}
           </div>
         </motion.section>
       )}
 
       {/* FEATURED */}
-      {featured.length > 0 && (
-        <motion.section 
+      {((pending.featured && featured.length === 0) || featured.length > 0) && (
+        <motion.section
           id="featured"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
           className="py-12 sm:py-16 lg:py-20 bg-warm-white"
         >
@@ -553,28 +552,32 @@ export default function HomePage() {
               title="Featured Products"
               subtitle="Handpicked for you"
             />
-            <motion.div 
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, margin: "-50px" }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
-            >
-              {featured.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </motion.div>
+            {pending.featured && featured.length === 0 ? (
+              <SectionGridSkeleton variant="product" count={8} />
+            ) : (
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true, margin: '-50px' }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
+              >
+                {featured.map((product) => (
+                  <ProductCard key={product.id} product={product} revealOnMount />
+                ))}
+              </motion.div>
+            )}
           </div>
         </motion.section>
       )}
 
       {/* ON SALE */}
-      {onSale.length > 0 && (
-        <motion.section 
+      {((pending.onSale && onSale.length === 0) || onSale.length > 0) && (
+        <motion.section
           id="on-sale"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
           className="py-12 sm:py-16 lg:py-20"
         >
@@ -584,17 +587,21 @@ export default function HomePage() {
               subtitle="Limited time offers"
               action={{ label: 'View All', href: '/collections/sale' }}
             />
-            <motion.div 
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, margin: "-50px" }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
-            >
-              {onSale.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </motion.div>
+            {pending.onSale && onSale.length === 0 ? (
+              <SectionGridSkeleton variant="product" count={8} />
+            ) : (
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true, margin: '-50px' }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
+              >
+                {onSale.map((product) => (
+                  <ProductCard key={product.id} product={product} revealOnMount />
+                ))}
+              </motion.div>
+            )}
           </div>
         </motion.section>
       )}

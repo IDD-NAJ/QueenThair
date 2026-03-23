@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { getProductById } from '../services/productService';
 import ProductCard from '../components/product/ProductCard';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import Button from '../components/common/Button';
 import EmptyState from '../components/common/EmptyState';
-import LoadingState from '../components/dashboard/LoadingState';
+import SectionGridSkeleton from '../components/common/SectionGridSkeleton';
 import useStore from '../store/useStore';
 
 export default function WishlistPage() {
-  const wishlist = useStore(state => state.wishlist);
+  const wishlist = useStore((state) => state.wishlist);
+  const addToCart = useStore((state) => state.addToCart);
+  const toggleWishlist = useStore((state) => state.toggleWishlist);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,9 +37,7 @@ export default function WishlistPage() {
     loadWishlistItems();
   }, [wishlist]);
 
-  if (loading) {
-    return <LoadingState />;
-  }
+  const skeletonCount = Math.min(Math.max(wishlist.length, 1), 8);
 
   return (
     <div className="min-h-screen bg-warm-white">
@@ -50,13 +48,17 @@ export default function WishlistPage() {
             My Wishlist
           </h1>
           <p className="text-sm text-text-muted mt-2">
-            {items.length} {items.length === 1 ? 'item' : 'items'} saved
+            {loading && wishlist.length > 0
+              ? 'Loading your saved items…'
+              : `${items.length} ${items.length === 1 ? 'item' : 'items'} saved`}
           </p>
         </div>
       </div>
 
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
-        {items.length === 0 ? (
+        {loading && wishlist.length > 0 ? (
+          <SectionGridSkeleton variant="product" count={skeletonCount} className="lg:grid-cols-3 xl:grid-cols-4" />
+        ) : items.length === 0 ? (
           <EmptyState
             icon="♡"
             title="Your wishlist is empty"
@@ -70,7 +72,7 @@ export default function WishlistPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-              {items.map(p => <ProductCard key={p.id} product={p} />)}
+              {items.map(p => <ProductCard key={p.id} product={p} revealOnMount />)}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
               <Button
