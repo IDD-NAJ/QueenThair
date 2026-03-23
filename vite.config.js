@@ -15,15 +15,28 @@ export default defineConfig({
     }
   },
   build: {
-    // Fail build on errors
     failOnWarn: false,
+    chunkSizeWarningLimit: 1000,
+    minify: 'esbuild',
     rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          animations: ['framer-motion'],
+          icons: ['lucide-react'],
+          charts: ['recharts'],
+          forms: ['react-hook-form', 'zod', '@hookform/resolvers'],
+          state: ['zustand']
+        }
+      },
       onwarn(warning, warn) {
-        // Suppress certain warnings that don't break the build
-        if (warning.code === 'THIS_IS_UNDEFINED') return
-        warn(warning)
+        if (warning.code === 'THIS_IS_UNDEFINED') return;
+        warn(warning);
       }
     }
+  },
+  esbuild: {
+    drop: ['console', 'debugger'],
   },
   // Clear console on each restart
   clearScreen: false

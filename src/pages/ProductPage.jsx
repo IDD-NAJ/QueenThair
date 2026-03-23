@@ -147,7 +147,7 @@ export default function ProductPage() {
 
   const images = product.images || [];
   const variants = product.variants || [];
-  const wishlisted = isInWishlist(product.id);
+  const wishlisted = isInWishlist(product.id, selectedVariant?.id);
   const currentPrice = selectedVariant?.price_override || product.base_price || 0;
   const comparePrice = product.compare_at_price;
   const inStock = product.inventory?.quantity_available > 0;
@@ -430,7 +430,7 @@ export default function ProductPage() {
               {inStock ? 'Add to Cart' : 'Out of Stock'}
             </Button>
             <button
-              onClick={() => toggleWishlist(product.id)}
+              onClick={() => toggleWishlist(product.id, selectedVariant?.id)}
               className={`w-12 h-12 border-2 rounded flex items-center justify-center transition-all ${
                 wishlisted ? 'border-gold bg-gold text-white' : 'border-border hover:border-gold'
               }`}
@@ -566,8 +566,8 @@ export default function ProductPage() {
           <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
             <h2 className="font-serif text-2xl sm:text-3xl text-charcoal mb-8">You May Also Like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-              {relatedProducts.map(p => (
-                <ProductCard key={p.id} product={p} />
+              {relatedProducts.map((p, idx) => (
+                <ProductCard key={p.id} product={p} index={idx} />
               ))}
             </div>
           </div>

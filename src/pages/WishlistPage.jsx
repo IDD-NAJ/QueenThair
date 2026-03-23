@@ -24,7 +24,10 @@ export default function WishlistPage() {
 
       setLoading(true);
       try {
-        const promises = wishlist.map(id => getProductById(id).catch(() => null));
+        // Extract product IDs from wishlist keys (format: "productId" or "productId:variantId")
+        const productIds = wishlist.map(key => key.split(':')[0]);
+        const uniqueProductIds = [...new Set(productIds)];
+        const promises = uniqueProductIds.map(id => getProductById(id).catch(() => null));
         const products = await Promise.all(promises);
         setItems(products.filter(Boolean));
       } catch (error) {
@@ -72,7 +75,7 @@ export default function WishlistPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-              {items.map(p => <ProductCard key={p.id} product={p} revealOnMount />)}
+              {items.map((p, idx) => <ProductCard key={p.id} product={p} index={idx} />)}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
               <Button
@@ -83,7 +86,7 @@ export default function WishlistPage() {
                 Add All to Cart
               </Button>
               <Button
-                onClick={() => items.forEach(p => toggleWishlist(p.id))}
+                onClick={() => wishlist.forEach(key => toggleWishlist(key.split(':')[0], key.split(':')[1] || null))}
                 variant="outline"
                 size="lg"
               >

@@ -76,7 +76,7 @@ export default function CartPage() {
                 <div key={item.key} className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-3 lg:gap-4 py-4 lg:py-5 border-b border-border">
                   <div className="flex gap-3 lg:gap-3.5 items-start lg:items-center">
                     <Img 
-                      src={item.images?.[0]?.url || item.image}
+                      src={item.image || item.images?.[0]?.url || item.images?.[0]?.image_url}
                       alt={item.name}
                       className="w-20 h-24 lg:w-[72px] lg:h-[90px] rounded flex-shrink-0" 
                     />

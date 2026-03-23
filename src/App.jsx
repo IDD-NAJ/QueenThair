@@ -8,6 +8,7 @@ import { useAuthInit } from './hooks/useAuth';
 import { useAutoLogout } from './hooks/useAutoLogout';
 import ErrorBoundary from './components/ErrorBoundary';
 import InactivityWarning from './components/common/InactivityWarning';
+import Preloader from './components/common/Preloader';
 
 function AppContent() {
   const location = useLocation();
@@ -23,6 +24,8 @@ function AppContent() {
 
   return (
     <>
+      <Preloader />
+      
       {/* Inactivity Warning Modal */}
       {showWarning && (
         <InactivityWarning 

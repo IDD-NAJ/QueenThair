@@ -65,36 +65,42 @@ const useStore = create(
         }
       },
       
-      toggleWishlist: async (productId) => {
+      toggleWishlist: async (productId, variantId = null) => {
         const { wishlist, user } = get();
-        const isWishlisted = wishlist.includes(productId);
+        // Create a unique key for product+variant combination
+        const wishlistKey = variantId ? `${productId}:${variantId}` : productId;
+        const isWishlisted = wishlist.includes(wishlistKey) || wishlist.includes(productId);
         
         // Optimistically update UI
         if (isWishlisted) {
-          set({ wishlist: wishlist.filter(id => id !== productId) });
+          set({ wishlist: wishlist.filter(id => id !== wishlistKey && id !== productId) });
           get().showToast('Removed from wishlist');
         } else {
-          set({ wishlist: [...wishlist, productId] });
+          set({ wishlist: [...wishlist, wishlistKey] });
           get().showToast('Added to wishlist');
         }
         
         // Sync to database if user is logged in
         if (user) {
           try {
-            await toggleWishlistService(user.id, productId);
+            await toggleWishlistService(user.id, productId, variantId);
           } catch (err) {
             console.error('Failed to sync wishlist:', err);
             // Revert UI on error
             if (isWishlisted) {
-              set({ wishlist: [...wishlist, productId] });
+              set({ wishlist: [...wishlist, wishlistKey] });
             } else {
-              set({ wishlist: wishlist.filter(id => id !== productId) });
+              set({ wishlist: wishlist.filter(id => id !== wishlistKey && id !== productId) });
             }
             get().showToast('Failed to update wishlist');
           }
         }
       },
-      isInWishlist: (productId) => get().wishlist.includes(productId),
+      isInWishlist: (productId, variantId = null) => {
+        const { wishlist } = get();
+        const wishlistKey = variantId ? `${productId}:${variantId}` : productId;
+        return wishlist.includes(wishlistKey) || wishlist.includes(productId);
+      },
 
       // Notifications
       notifications: [],

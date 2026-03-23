@@ -4,6 +4,7 @@ import { Heart, ShoppingCart, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { getWishlist, removeFromWishlist } from '../../services/wishlistService';
+import Img from '../../components/common/Img';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import EmptyState from '../../components/dashboard/EmptyState';
@@ -92,8 +93,8 @@ export default function DashboardWishlist() {
                 >
                   <X className="w-4 h-4 text-gray-600 hover:text-red-600" />
                 </button>
-                <img
-                  src={item.product?.images?.[0]?.image_url || '/placeholder.jpg'}
+                <Img
+                  src={item.product?.images?.[0]?.image_url || item.product?.images?.[0]?.url || item.product?.image}
                   alt={item.product?.name}
                   className="w-full h-full object-cover cursor-pointer"
                   onClick={() => navigate(`/product/${item.product?.slug}`)}

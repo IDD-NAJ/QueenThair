@@ -12,7 +12,7 @@ export default function ProductCard({ product, index = 0 }) {
   const addToCart = useStore(state => state.addToCart);
   const toggleWishlist = useStore(state => state.toggleWishlist);
   const isInWishlist = useStore(state => state.isInWishlist);
-  const wishlisted = isInWishlist(product.id);
+  const wishlisted = isInWishlist(product.id, product.variants?.[0]?.id);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -40,8 +40,8 @@ export default function ProductCard({ product, index = 0 }) {
       {/* Image */}
       <div className="relative overflow-hidden aspect-[3/4] bg-neutral-100 rounded-t">
         <Img 
-          src={product.images?.[0]?.url || product.image}
-          alt={product.images?.[0]?.alt || product.name}
+          src={product.images?.[0]?.url || product.images?.[0]?.image_url || product.image}
+          alt={product.images?.[0]?.alt || product.images?.[0]?.alt_text || product.name}
           className="absolute inset-0 transition-transform duration-500 group-hover:scale-105" 
         />
         
