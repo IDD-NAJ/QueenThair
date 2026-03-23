@@ -78,7 +78,13 @@ export async function signIn({ email, password }) {
  * Admins → /admin; others → prior protected URL if safe, else /dashboard.
  */
 export function getPostLoginPath(profile, redirectState) {
-  if (profile?.role === 'admin') return '/admin';
+  // Check for admin role in multiple locations
+  const isAdmin = profile?.role === 'admin' || 
+                  profile?.user_metadata?.role === 'admin' ||
+                  profile?.raw_user_meta_data?.role === 'admin';
+  
+  if (isAdmin) return '/admin';
+  
   const from = redirectState?.from?.pathname;
   if (
     typeof from === 'string' &&

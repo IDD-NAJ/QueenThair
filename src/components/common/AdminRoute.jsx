@@ -2,24 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 
-const MAX_AUTH_WAIT_MS = 20000; // Max 20 seconds to wait for auth init
+const MAX_AUTH_WAIT_MS = 5000; // Shorter timeout - just wait for Supabase session restore
 
 export default function AdminRoute({ children }) {
   const user = useStore(state => state.user);
   const role = useStore(state => state.role);
-  const authLoading = useStore(state => state.authLoading);
   const authInitialized = useStore(state => state.authInitialized);
-  const [updateTrigger, setUpdateTrigger] = useState(0);
   const [waitTimeExceeded, setWaitTimeExceeded] = useState(false);
-
-  useEffect(() => {
-    const handleAuthChange = () => {
-      setUpdateTrigger(prev => prev + 1);
-    };
-
-    window.addEventListener('authStateChanged', handleAuthChange);
-    return () => window.removeEventListener('authStateChanged', handleAuthChange);
-  }, []);
 
   // Safety timeout: if auth takes too long, allow proceeding
   useEffect(() => {
@@ -32,10 +21,23 @@ export default function AdminRoute({ children }) {
     }
   }, [authInitialized, waitTimeExceeded]);
 
-  console.log('[AdminRoute] state:', { initialized: authInitialized, loading: authLoading, user: !!user, role, trigger: updateTrigger, waitTimeExceeded });
+  // Calculate isAdmin from all available sources
+  const isAdmin = role === 'admin' || 
+                  user?.user_metadata?.role === 'admin' ||
+                  user?.raw_user_meta_data?.role === 'admin' ||
+                  user?.email?.endsWith('@Queenthair.com');
 
-  // Wait for auth initialization to complete (or timeout)
-  if (!authInitialized && !waitTimeExceeded || authLoading) {
+  console.log('[AdminRoute] state:', { 
+    initialized: authInitialized, 
+    user: !!user, 
+    role, 
+    userMetadataRole: user?.user_metadata?.role,
+    waitTimeExceeded,
+    isAdmin 
+  });
+
+  // Wait for auth initialization (or timeout)
+  if (!authInitialized && !waitTimeExceeded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-warm-white">
         <div className="text-center">
@@ -46,21 +48,17 @@ export default function AdminRoute({ children }) {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!user) {
-    console.log('[AdminRoute] not authenticated, redirecting to login');
-    return <Navigate to="/login" replace />;
+  // If we have a user, check admin status immediately
+  if (user) {
+    if (!isAdmin) {
+      console.log('[AdminRoute] not admin, redirecting to dashboard');
+      return <Navigate to="/dashboard" replace />;
+    }
+    // User is admin - render children
+    return children;
   }
 
-  // Check admin role - fallback to email domain if profile missing
-  const isAdmin = role === 'admin' || 
-                  user.user_metadata?.role === 'admin' || 
-                  user.email?.endsWith('@Queenthair.com');
-  
-  if (!isAdmin) {
-    console.log('[AdminRoute] not admin, redirecting to dashboard');
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
+  // No user - redirect to login
+  console.log('[AdminRoute] not authenticated, redirecting to login');
+  return <Navigate to="/login" replace />;
 }

@@ -67,7 +67,7 @@ export default function LoginPage() {
         });
       }
 
-      navigate(getPostLoginPath(profile, location.state), { replace: true });
+      navigate(getPostLoginPath(profile || user, location.state), { replace: true });
     } catch (error) {
       console.error('Login error:', error);
       showToast(error?.message || 'Sign in failed. Please try again.');

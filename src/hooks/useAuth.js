@@ -53,8 +53,9 @@ export function useAuthInit() {
 
       // Unblock routes immediately. Keep existing profile for same user (e.g. TOKEN_REFRESHED) to avoid role flicker.
       // Do NOT await mergeGuestCart here — it can hang on network/RLS and left GuestRoute stuck (same as LoginPage).
+      // On refresh, pass user as profile so role can be extracted from user_metadata while profile loads.
       const keepProfile =
-        prev?.id === user.id && stateSnap.profile?.id === user.id ? stateSnap.profile : null;
+        prev?.id === user.id && stateSnap.profile?.id === user.id ? stateSnap.profile : user;
       setUserAndProfile(user, keepProfile);
       setAuthLoading(false);
       setAuthInitialized(true);

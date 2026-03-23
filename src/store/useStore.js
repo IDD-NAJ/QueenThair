@@ -165,10 +165,15 @@ const useStore = create(
       }),
 
       setUserAndProfile: (user, profile) => {
+        // Extract role from profile or user metadata
+        const role = profile?.role || 
+                     user?.user_metadata?.role || 
+                     user?.raw_user_meta_data?.role || 
+                     null;
         set({
           user,
           profile,
-          role: profile?.role ?? null,
+          role,
           isAuthenticated: !!user,
         });
         // Load wishlist from DB when user is set

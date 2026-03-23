@@ -14,17 +14,26 @@ import Drawer from '../components/common/Drawer';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
 const COLORS = [
-  { key: 'natural-black', name: 'Natural Black', hex: '#1A1A1A' },
-  { key: 'dark-brown', name: 'Dark Brown', hex: '#5C3A1E' },
-  { key: 'honey-blonde', name: 'Honey Blonde', hex: '#E8C97A' },
-  { key: 'platinum-blonde', name: 'Platinum Blonde', hex: '#F5E6D3' },
-  { key: 'auburn', name: 'Auburn', hex: '#922B21' },
-  { key: 'burgundy', name: 'Burgundy', hex: '#800020' },
-  { key: 'ash-gray', name: 'Ash Gray', hex: '#9E9E9E' },
-  { key: 'caramel', name: 'Caramel', hex: '#C19A6B' },
+  { key: 'natural-black', name: 'Natural Black', hex: '#1A1A1A', matches: ['black', 'natural-black', 'natural black', '1b'] },
+  { key: 'dark-brown', name: 'Dark Brown', hex: '#5C3A1E', matches: ['brown', 'dark-brown', 'dark brown', '2', '3', 'chocolate'] },
+  { key: 'honey-blonde', name: 'Honey Blonde', hex: '#E8C97A', matches: ['blonde', 'honey', 'honey-blonde', 'honey blonde', '27', '30'] },
+  { key: 'platinum-blonde', name: 'Platinum Blonde', hex: '#F5E6D3', matches: ['platinum', 'platinum-blonde', 'platinum blonde', '613'] },
+  { key: 'auburn', name: 'Auburn', hex: '#922B21', matches: ['auburn', 'red', '33'] },
+  { key: 'burgundy', name: 'Burgundy', hex: '#800020', matches: ['burgundy', 'wine', 'plum', '99j'] },
+  { key: 'ash-gray', name: 'Ash Gray', hex: '#9E9E9E', matches: ['gray', 'grey', 'ash', 'ash-gray', 'silver'] },
+  { key: 'caramel', name: 'Caramel', hex: '#C19A6B', matches: ['caramel', 'copper'] },
 ];
 
 const TEXTURES = ['straight', 'body-wave', 'deep-wave', 'curly', 'kinky-curly', 'water-wave'];
+
+const TEXTURE_MATCHES = {
+  'straight': ['straight', 'silky'],
+  'body-wave': ['body wave', 'body-wave', 'wave', 'wavy'],
+  'deep-wave': ['deep wave', 'deep-wave', 'deep'],
+  'curly': ['curly', 'curl'],
+  'kinky-curly': ['kinky', 'kinky-curly', 'coily'],
+  'water-wave': ['water wave', 'water-wave', 'water']
+};
 
 export default function ShopPage() {
   const { category: categorySlug } = useParams();
@@ -72,16 +81,27 @@ export default function ShopPage() {
 
         // Client-side filtering for colors and textures
         if (selectedColors.length > 0) {
-          fetchedProducts = fetchedProducts.filter(p => 
-            p.variants?.some(v => selectedColors.includes(v.color?.toLowerCase().replace(/\s+/g, '-')))
-          );
+          fetchedProducts = fetchedProducts.filter(p => {
+            if (!p.variants || p.variants.length === 0) return false;
+            return p.variants.some(v => {
+              if (!v.color) return false;
+              const dbColor = v.color.toLowerCase();
+              return selectedColors.some(selectedKey => {
+                const colorObj = COLORS.find(c => c.key === selectedKey);
+                return colorObj?.matches.some(m => dbColor.includes(m));
+              });
+            });
+          });
         }
 
         if (selectedTextures.length > 0) {
-          fetchedProducts = fetchedProducts.filter(p => 
-            selectedTextures.includes(p.short_description?.toLowerCase().split(' ')[1]) ||
-            selectedTextures.some(t => p.name?.toLowerCase().includes(t))
-          );
+          fetchedProducts = fetchedProducts.filter(p => {
+            const textToSearch = `${p.name || ''} ${p.short_description || ''}`.toLowerCase();
+            return selectedTextures.some(textureKey => {
+              const matchWords = TEXTURE_MATCHES[textureKey] || [textureKey];
+              return matchWords.some(word => textToSearch.includes(word));
+            });
+          });
         }
 
         setProducts(fetchedProducts);
