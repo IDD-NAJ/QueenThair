@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useStore from '../../store/useStore';
 
+const MAX_AUTH_WAIT_MS = 20000; // Max 20 seconds to wait for auth init
+
 function ProtectedRoute({ children }) {
   const user = useStore(state => state.user);
   const authLoading = useStore(state => state.authLoading);
   const authInitialized = useStore(state => state.authInitialized);
   const location = useLocation();
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [waitTimeExceeded, setWaitTimeExceeded] = useState(false);
 
   useEffect(() => {
     const handleAuthChange = () => {
@@ -18,10 +21,21 @@ function ProtectedRoute({ children }) {
     return () => window.removeEventListener('authStateChanged', handleAuthChange);
   }, []);
 
-  console.log('[ProtectedRoute] state:', { initialized: authInitialized, loading: authLoading, user: !!user, trigger: updateTrigger });
+  // Safety timeout: if auth takes too long, allow proceeding
+  useEffect(() => {
+    if (!authInitialized && !waitTimeExceeded) {
+      const timer = setTimeout(() => {
+        console.warn('[ProtectedRoute] Auth wait timeout exceeded, proceeding...');
+        setWaitTimeExceeded(true);
+      }, MAX_AUTH_WAIT_MS);
+      return () => clearTimeout(timer);
+    }
+  }, [authInitialized, waitTimeExceeded]);
 
-  // Wait for auth initialization to complete
-  if (!authInitialized || authLoading) {
+  console.log('[ProtectedRoute] state:', { initialized: authInitialized, loading: authLoading, user: !!user, trigger: updateTrigger, waitTimeExceeded });
+
+  // Wait for auth initialization to complete (or timeout)
+  if (!authInitialized && !waitTimeExceeded || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-warm-white">
         <div className="text-center">

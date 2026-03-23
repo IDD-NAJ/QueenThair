@@ -4,6 +4,9 @@ import { adminService } from '../../services/adminService';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import { format } from 'date-fns';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -25,13 +28,13 @@ export default function AdminCustomers() {
     setError(null);
     
     try {
-      const data = await adminService.getUsers({});
+      const data = await withTimeout(() => adminService.getUsers({}), TIMEOUT_MS);
       console.log('Customers data from service:', data);
       console.log('First customer sample:', data?.[0]);
       setCustomers(data || []);
     } catch (err) {
       console.error('Error loading customers:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to load customers. Please try again.');
     } finally {
       setLoading(false);
     }

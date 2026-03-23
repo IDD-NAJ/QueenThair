@@ -3,6 +3,9 @@ import { FolderPlus, Edit2, Trash2, Eye, EyeOff, Package, Search, Filter, MoreVe
 import { categoryService } from '../../services/categoryService';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -30,10 +33,11 @@ export default function AdminCategories() {
     setError(null);
     
     try {
-      const data = await categoryService.getCategories();
-      setCategories(data);
+      const data = await withTimeout(() => categoryService.getCategories(), TIMEOUT_MS);
+      setCategories(data || []);
     } catch (err) {
-      setError(err.message);
+      console.error('Categories load error:', err);
+      setError(err.message || 'Failed to load categories. Please try again.');
     } finally {
       setLoading(false);
     }

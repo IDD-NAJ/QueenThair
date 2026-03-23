@@ -4,6 +4,9 @@ import { adminService } from '../../services/adminService';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import { format } from 'date-fns';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -26,10 +29,11 @@ export default function AdminOrders() {
     setError(null);
     
     try {
-      const data = await adminService.getOrders({});
+      const data = await withTimeout(() => adminService.getOrders({}), TIMEOUT_MS);
       setOrders(data || []);
     } catch (err) {
-      setError(err.message);
+      console.error('Orders load error:', err);
+      setError(err.message || 'Failed to load orders. Please try again.');
     } finally {
       setLoading(false);
     }

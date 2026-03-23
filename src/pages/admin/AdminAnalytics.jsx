@@ -16,8 +16,10 @@ import {
   getSafeObject,
   getChartColors
 } from '../../services/adminUtils';
+import { withTimeout } from '../../utils/safeAsync';
 
 const COLORS = getChartColors();
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminAnalytics() {
   const [analytics, setAnalytics] = useState({
@@ -45,12 +47,12 @@ export default function AdminAnalytics() {
       
       console.log(`Loading analytics for ${days} days`);
       
-      // Fetch real analytics data using RPC functions
+      // Fetch real analytics data using RPC functions with timeout
       const [revenueAnalytics, topProducts, customerAnalytics, categoryAnalytics] = await Promise.all([
-        adminService.getRevenueAnalytics(days),
-        adminService.getTopProducts(days, 10),
-        adminService.getCustomerAnalytics(days),
-        adminService.getCategoryAnalytics(days)
+        withTimeout(() => adminService.getRevenueAnalytics(days), TIMEOUT_MS),
+        withTimeout(() => adminService.getTopProducts(days, 10), TIMEOUT_MS),
+        withTimeout(() => adminService.getCustomerAnalytics(days), TIMEOUT_MS),
+        withTimeout(() => adminService.getCategoryAnalytics(days), TIMEOUT_MS)
       ]);
 
       console.log('Real Analytics Data Loaded:', {
@@ -127,7 +129,7 @@ export default function AdminAnalytics() {
 
     } catch (err) {
       console.error('Failed to load analytics:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to load analytics. Please try again.');
     } finally {
       setLoading(false);
     }

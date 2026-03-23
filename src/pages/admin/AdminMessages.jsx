@@ -5,6 +5,9 @@ import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import useStore from '../../store/useStore';
 import { format } from 'date-fns';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminMessages() {
   const [messages, setMessages] = useState([]);
@@ -22,10 +25,11 @@ export default function AdminMessages() {
     setError(null);
     
     try {
-      const data = await adminService.getContactMessages({ status: filter });
+      const data = await withTimeout(() => adminService.getContactMessages({ status: filter }), TIMEOUT_MS);
       setMessages(data || []);
     } catch (err) {
-      setError(err.message);
+      console.error('Messages load error:', err);
+      setError(err.message || 'Failed to load messages. Please try again.');
     } finally {
       setLoading(false);
     }

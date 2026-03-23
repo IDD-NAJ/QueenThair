@@ -46,7 +46,7 @@ export default function AdminHomepageShowcase() {
   const [items, setItems] = useState([]);
   const [catalogCategories, setCatalogCategories] = useState([]);
   const fileInputRef = useRef(null);
-  const [uploadPick, setUploadPick] = useState(null);
+  const uploadPickRef = useRef(null);
   const [uploadingKey, setUploadingKey] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
@@ -151,15 +151,16 @@ export default function AdminHomepageShowcase() {
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
   const openMediaPicker = (itemId, kind) => {
-    setUploadPick({ itemId, kind });
+    uploadPickRef.current = { itemId, kind };
+    // Force re-render to update accept attribute on file input
     requestAnimationFrame(() => fileInputRef.current?.click());
   };
 
   const handleMediaFile = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    const target = uploadPick;
-    setUploadPick(null);
+    const target = uploadPickRef.current;
+    uploadPickRef.current = null;
     if (!file || !target) return;
 
     const ext = (file.name.split('.').pop() || '').toLowerCase();
@@ -257,7 +258,7 @@ export default function AdminHomepageShowcase() {
         type="file"
         className="hidden"
         accept={
-          uploadPick?.kind === 'video'
+          uploadPickRef.current?.kind === 'video'
             ? 'video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov'
             : 'image/jpeg,image/png,image/webp,image/gif'
         }

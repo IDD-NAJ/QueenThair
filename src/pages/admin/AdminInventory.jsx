@@ -5,6 +5,9 @@ import supabase from '../../lib/supabaseClient';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import { format } from 'date-fns';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminInventory() {
   const [products, setProducts] = useState([]);
@@ -33,10 +36,11 @@ export default function AdminInventory() {
     setError(null);
     
     try {
-      const result = await adminService.getInventoryList({});
+      const result = await withTimeout(() => adminService.getInventoryList({}), TIMEOUT_MS);
       setProducts(result || []);
     } catch (err) {
-      setError(err.message);
+      console.error('Inventory load error:', err);
+      setError(err.message || 'Failed to load inventory. Please try again.');
     } finally {
       setLoading(false);
     }

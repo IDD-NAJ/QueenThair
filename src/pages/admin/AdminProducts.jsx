@@ -7,6 +7,9 @@ import supabase from '../../lib/supabaseClient';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import CSVUploadModal from '../../components/admin/CSVUploadModal';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -64,14 +67,15 @@ export default function AdminProducts() {
     
     try {
       const [productsData, categoriesData] = await Promise.all([
-        adminService.getProductsWithImages({}),
-        adminService.getCategories()
+        withTimeout(() => adminService.getProductsWithImages({}), TIMEOUT_MS),
+        withTimeout(() => adminService.getCategories(), TIMEOUT_MS)
       ]);
       
       setProducts(productsData || []);
       setCategories(categoriesData || []);
     } catch (err) {
-      setError(err.message);
+      console.error('Products data load error:', err);
+      setError(err.message || 'Failed to load products. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -313,31 +317,22 @@ export default function AdminProducts() {
           changes: productData
         });
       } else {
-        // Create new product with images
+        // Create new product with images - use service method that handles RLS
         console.log('Creating product with data:', productData);
         console.log('Image data:', imageData);
         
-        // Use adminService which handles RLS properly
-        const product = await adminService.createProduct(productData);
+        // Use adminService.createProductWithImages which handles inventory and images
+        const product = await adminService.createProductWithImages(productData, imageData);
         console.log('Product created via service:', product);
         productId = product.id;
         
-        // Create inventory record
-        await supabase
-          .from('inventory')
-          .insert({
-            product_id: productId,
-            quantity_available: 0,
-            quantity_reserved: 0,
-            low_stock_threshold: 5,
-            track_inventory: true,
-            allow_backorder: false
-          });
-
-        // Handle file upload if needed
+        // Handle file upload if needed (separate from the URL-based images)
         if (imageFile) {
           const uploadedUrl = await uploadImage(productId);
           console.log('Image uploaded:', uploadedUrl);
+          
+          // Update the product image with the uploaded file URL
+          await adminService.updateProductImage(productId, uploadedUrl);
         }
 
         // Log activity
@@ -346,30 +341,15 @@ export default function AdminProducts() {
         });
       }
 
-      // Handle variants
+      // Handle variants using adminService
       if (variants.length > 0) {
         // Delete existing variants if editing
         if (editingProduct) {
-          await supabase
-            .from('product_variants')
-            .delete()
-            .eq('product_id', productId);
+          await adminService.deleteProductVariants(productId);
         }
 
-        // Insert new variants
-        const variantsToInsert = variants.map(v => ({
-          product_id: productId,
-          sku: v.sku,
-          color: v.color,
-          length: v.length,
-          density: v.density,
-          price_override: v.price_override ? parseFloat(v.price_override) : null,
-          is_active: true,
-        }));
-
-        await supabase
-          .from('product_variants')
-          .insert(variantsToInsert);
+        // Create new variants
+        await adminService.createProductVariants(productId, variants);
       }
 
       await loadData();

@@ -28,7 +28,11 @@ export default function DashboardOrders() {
   }, [orders, searchTerm, statusFilter]);
 
   const loadOrders = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      setOrders([]);
+      return;
+    }
     
     setLoading(true);
     setError(null);

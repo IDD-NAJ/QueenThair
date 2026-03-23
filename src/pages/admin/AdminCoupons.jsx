@@ -4,6 +4,9 @@ import { adminService } from '../../services/adminService';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import { format } from 'date-fns';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
@@ -41,10 +44,11 @@ export default function AdminCoupons() {
     setError(null);
     
     try {
-      const data = await adminService.getCoupons();
+      const data = await withTimeout(() => adminService.getCoupons(), TIMEOUT_MS);
       setCoupons(data || []);
     } catch (err) {
-      setError(err.message);
+      console.error('Coupons load error:', err);
+      setError(err.message || 'Failed to load coupons. Please try again.');
     } finally {
       setLoading(false);
     }

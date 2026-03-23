@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Globe, CreditCard, Truck } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
@@ -21,10 +24,11 @@ export default function AdminSettings() {
       setLoading(true);
       setLoadError(null);
       try {
-        const data = await adminService.getSiteStoreSettings();
+        const data = await withTimeout(() => adminService.getSiteStoreSettings(), TIMEOUT_MS);
         setSettings((prev) => ({ ...prev, ...data }));
       } catch (e) {
-        setLoadError(e.message);
+        console.error('Settings load error:', e);
+        setLoadError(e.message || 'Failed to load settings');
       } finally {
         setLoading(false);
       }

@@ -22,6 +22,9 @@ import {
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import supabase from '../../lib/supabaseClient';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -45,10 +48,10 @@ export default function AdminDashboard() {
       const userId = user?.id;
 
       const [dashboardStats, orders, products, notificationData] = await Promise.all([
-        adminService.getDashboardStats(),
-        adminService.getOrders({ limit: 5 }),
-        adminService.getTopProducts(7, 5),
-        userId ? adminService.getNotifications(userId, true) : Promise.resolve([])
+        withTimeout(() => adminService.getDashboardStats(), TIMEOUT_MS),
+        withTimeout(() => adminService.getOrders({ limit: 5 }), TIMEOUT_MS),
+        withTimeout(() => adminService.getTopProducts(7, 5), TIMEOUT_MS),
+        userId ? withTimeout(() => adminService.getNotifications(userId, true), TIMEOUT_MS) : Promise.resolve([])
       ]);
 
       setStats(dashboardStats);
@@ -56,7 +59,8 @@ export default function AdminDashboard() {
       setTopProducts(products);
       setNotifications(notificationData?.slice(0, 5) || []);
     } catch (err) {
-      setError(err.message);
+      console.error('Dashboard data load error:', err);
+      setError(err.message || 'Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }

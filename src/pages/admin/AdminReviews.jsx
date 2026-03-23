@@ -4,6 +4,9 @@ import { adminService } from '../../services/adminService';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import { format } from 'date-fns';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
@@ -20,10 +23,11 @@ export default function AdminReviews() {
     setError(null);
     
     try {
-      const data = await adminService.getReviews({ status: filter === 'all' ? undefined : filter });
+      const data = await withTimeout(() => adminService.getReviews({ status: filter === 'all' ? undefined : filter }), TIMEOUT_MS);
       setReviews(data || []);
     } catch (err) {
-      setError(err.message);
+      console.error('Reviews load error:', err);
+      setError(err.message || 'Failed to load reviews. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -51,22 +51,22 @@ export function useAuthInit() {
       const stateSnap = useStore.getState();
       const prev = stateSnap.user;
 
-      // User just signed in – merge guest cart
-      if (user && !prev) {
-        const sessionId = stateSnap.sessionId;
-        if (sessionId) {
-          await mergeGuestCart(sessionId, user.id).catch((err) => {
-            console.error('[auth] cart merge error:', err);
-          });
-        }
-      }
-
       // Unblock routes immediately. Keep existing profile for same user (e.g. TOKEN_REFRESHED) to avoid role flicker.
+      // Do NOT await mergeGuestCart here — it can hang on network/RLS and left GuestRoute stuck (same as LoginPage).
       const keepProfile =
         prev?.id === user.id && stateSnap.profile?.id === user.id ? stateSnap.profile : null;
       setUserAndProfile(user, keepProfile);
       setAuthLoading(false);
       setAuthInitialized(true);
+
+      if (user && !prev) {
+        const sessionId = stateSnap.sessionId;
+        if (sessionId) {
+          mergeGuestCart(sessionId, user.id).catch((err) => {
+            console.error('[auth] cart merge error:', err);
+          });
+        }
+      }
 
       let profile = null;
       try {

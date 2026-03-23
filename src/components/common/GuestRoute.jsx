@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { getPostLoginPath } from '../../services/authService';
+
+const MAX_AUTH_WAIT_MS = 20000; // Max 20 seconds to wait for auth init
 
 /**
  * GuestRoute - Redirects authenticated users away from login/register pages
@@ -14,11 +16,23 @@ export default function GuestRoute({ children }) {
   const role = useStore(state => state.role);
   const authLoading = useStore(state => state.authLoading);
   const authInitialized = useStore(state => state.authInitialized);
+  const [waitTimeExceeded, setWaitTimeExceeded] = useState(false);
 
-  console.log('[GuestRoute] state:', { initialized: authInitialized, loading: authLoading, user: !!user, role });
+  // Safety timeout: if auth takes too long, allow proceeding
+  useEffect(() => {
+    if (!authInitialized && !waitTimeExceeded) {
+      const timer = setTimeout(() => {
+        console.warn('[GuestRoute] Auth wait timeout exceeded, proceeding...');
+        setWaitTimeExceeded(true);
+      }, MAX_AUTH_WAIT_MS);
+      return () => clearTimeout(timer);
+    }
+  }, [authInitialized, waitTimeExceeded]);
 
-  // Wait for auth initialization to complete
-  if (!authInitialized || authLoading) {
+  console.log('[GuestRoute] state:', { initialized: authInitialized, loading: authLoading, user: !!user, role, waitTimeExceeded });
+
+  // Wait for auth initialization to complete (or timeout)
+  if (!authInitialized && !waitTimeExceeded || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-warm-white">
         <div className="text-center">

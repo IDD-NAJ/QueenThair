@@ -2137,6 +2137,51 @@ export const adminService = {
     await this.upsertAdminSetting('saved_admin_reports', { value_json: { reports } });
   },
 
+  // ── Product Variants Management ──────────────────────────────
+  async deleteProductVariants(productId) {
+    const { error } = await supabase
+      .from('product_variants')
+      .delete()
+      .eq('product_id', productId);
+    
+    if (error) throw error;
+  },
+
+  async createProductVariants(productId, variants) {
+    if (!variants || variants.length === 0) return [];
+    
+    const variantsToInsert = variants.map(v => ({
+      product_id: productId,
+      sku: v.sku,
+      color: v.color,
+      length: v.length,
+      density: v.density,
+      price_override: v.price_override ? parseFloat(v.price_override) : null,
+      is_active: true,
+    }));
+
+    const { data, error } = await supabase
+      .from('product_variants')
+      .insert(variantsToInsert)
+      .select();
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async updateProductImage(productId, imageUrl) {
+    const { data, error } = await supabase
+      .from('product_images')
+      .update({ image_url: imageUrl })
+      .eq('product_id', productId)
+      .eq('is_primary', true)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
   _reportDateCutoff(rangeKey) {
     const now = new Date();
     if (rangeKey === 'today') return startOfDay(now);

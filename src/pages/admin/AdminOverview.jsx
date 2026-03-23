@@ -5,6 +5,9 @@ import StatCard from '../../components/dashboard/StatCard';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import { format } from 'date-fns';
+import { withTimeout } from '../../utils/safeAsync';
+
+const TIMEOUT_MS = 30000; // 30 second timeout
 
 export default function AdminOverview() {
   const [stats, setStats] = useState(null);
@@ -21,15 +24,16 @@ export default function AdminOverview() {
     setError(null);
     
     try {
-      const stats = await adminService.getDashboardStats();
+      const stats = await withTimeout(() => adminService.getDashboardStats(), TIMEOUT_MS);
       
       setStats(stats);
       
       // Get recent orders with better data
-      const ordersData = await adminService.getOrders({ limit: 10 });
+      const ordersData = await withTimeout(() => adminService.getOrders({ limit: 10 }), TIMEOUT_MS);
       setRecentOrders(ordersData.slice(0, 5));
     } catch (err) {
-      setError(err.message);
+      console.error('Dashboard data load error:', err);
+      setError(err.message || 'Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }
