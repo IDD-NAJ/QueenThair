@@ -533,7 +533,7 @@ export default function AdminShipping() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="">Select zone</option>
-                      {shippingZones.map(zone => (
+                      {(shippingZones || []).map(zone => (
                         <option key={zone.id} value={zone.id}>
                           {zone.name}
                         </option>

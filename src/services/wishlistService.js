@@ -43,14 +43,57 @@ async function getOrCreateWishlist(userId) {
 export async function getWishlist(userId) {
   const wishlist = await getOrCreateWishlist(userId);
 
-  const { data, error } = await supabase
+  // Fetch wishlist items
+  const { data: items, error } = await supabase
     .from('wishlist_items')
-    .select(WISHLIST_ITEMS_SELECT)
+    .select('id, product_id, variant_id, created_at')
     .eq('wishlist_id', wishlist.id)
     .order('created_at', { ascending: false });
+  
   if (error) throw error;
+  if (!items || items.length === 0) return { wishlist, items: [] };
 
-  return { wishlist, items: data || [] };
+  // Fetch product IDs and variant IDs
+  const productIds = [...new Set(items.map(i => i.product_id).filter(Boolean))];
+  const variantIds = [...new Set(items.map(i => i.variant_id).filter(Boolean))];
+
+  // Batch fetch products, variants, and images
+  const [productsRes, variantsRes, imagesRes] = await Promise.all([
+    productIds.length > 0 ? supabase
+      .from('products')
+      .select('id, name, slug, base_price, compare_at_price, on_sale, badge, rating_average, review_count, short_description')
+      .in('id', productIds) : Promise.resolve({ data: [] }),
+    variantIds.length > 0 ? supabase
+      .from('product_variants')
+      .select('id, color, length, density, option_label')
+      .in('id', variantIds) : Promise.resolve({ data: [] }),
+    productIds.length > 0 ? supabase
+      .from('product_images')
+      .select('id, product_id, image_url, alt_text, is_primary')
+      .in('product_id', productIds)
+      .order('sort_order', { ascending: true }) : Promise.resolve({ data: [] })
+  ]);
+
+  // Create lookup maps
+  const productsById = (productsRes.data || []).reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
+  const variantsById = (variantsRes.data || []).reduce((acc, v) => { acc[v.id] = v; return acc; }, {});
+  const imagesByProduct = (imagesRes.data || []).reduce((acc, img) => {
+    if (!acc[img.product_id]) acc[img.product_id] = [];
+    acc[img.product_id].push(img);
+    return acc;
+  }, {});
+
+  // Combine data
+  const fullItems = items.map(item => ({
+    ...item,
+    product: productsById[item.product_id] ? {
+      ...productsById[item.product_id],
+      images: imagesByProduct[item.product_id] || []
+    } : null,
+    variant: variantsById[item.variant_id] || null
+  }));
+
+  return { wishlist, items: fullItems };
 }
 
 // ─── Add to wishlist ──────────────────────────────────────────────────────────
@@ -63,10 +106,39 @@ export async function addToWishlist(userId, productId, variantId = null) {
       { wishlist_id: wishlist.id, product_id: productId, variant_id: variantId },
       { onConflict: 'wishlist_id,product_id,variant_id' }
     )
-    .select(WISHLIST_ITEMS_SELECT)
+    .select('id, product_id, variant_id, created_at')
     .single();
+  
   if (error) throw error;
-  return data;
+
+  // Fetch full product data
+  const { data: product } = await supabase
+    .from('products')
+    .select('id, name, slug, base_price, compare_at_price, on_sale, badge, rating_average, review_count, short_description')
+    .eq('id', productId)
+    .single();
+
+  const { data: images } = await supabase
+    .from('product_images')
+    .select('id, product_id, image_url, alt_text, is_primary')
+    .eq('product_id', productId)
+    .order('sort_order', { ascending: true });
+
+  let variant = null;
+  if (variantId) {
+    const { data: v } = await supabase
+      .from('product_variants')
+      .select('id, color, length, density, option_label')
+      .eq('id', variantId)
+      .single();
+    variant = v;
+  }
+
+  return {
+    ...data,
+    product: product ? { ...product, images: images || [] } : null,
+    variant
+  };
 }
 
 // ─── Remove from wishlist ─────────────────────────────────────────────────────

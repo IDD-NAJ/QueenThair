@@ -91,6 +91,7 @@ const navigationItems = [
       { name: 'Logs', href: '/admin/logs', icon: Terminal },
       { name: 'Maintenance', href: '/admin/maintenance', icon: Wrench },
       { name: 'Settings', href: '/admin/settings', icon: Settings },
+      { name: 'Notifications', href: '/admin/notifications', icon: Bell },
       { name: 'Activity', href: '/admin/activity', icon: BarChart3 },
     ]
   }

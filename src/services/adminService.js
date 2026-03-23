@@ -113,12 +113,7 @@ export const adminService = {
   async getProducts(filters = {}) {
     let query = supabase
       .from('products')
-      .select(`
-        *,
-        category:categories(name, slug),
-        variants:product_variants(*),
-        inventory:inventory(*)
-      `);
+      .select('*');
 
     if (filters.category) {
       query = query.eq('category_id', filters.category);
@@ -129,11 +124,14 @@ export const adminService = {
     if (filters.search) {
       query = query.ilike('name', `%${filters.search}%`);
     }
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    }
 
     const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async createProduct(productData) {
@@ -927,15 +925,14 @@ export const adminService = {
         return;
       }
 
-      const { error } = await supabase
-        .from('admin_activity_logs')
-        .insert({
-          admin_id: userId,
-          action: actionType,
-          entity_type: entityType,
-          entity_id: entityId,
-          details: details
-        });
+      // Use the database function which has SECURITY DEFINER (bypasses RLS)
+      const { error } = await supabase.rpc('log_admin_activity', {
+        p_admin_id: userId,
+        p_action: actionType,
+        p_entity_type: entityType,
+        p_entity_id: entityId,
+        p_details: details
+      });
       
       if (error) throw error;
     } catch (err) {
@@ -981,11 +978,9 @@ export const adminService = {
       .from('products')
       .select(`
         *,
-        category:categories(name, slug),
-        variants:product_variants(*),
-        inventory:inventory(*),
-        images:product_images(*),
-        reviews:reviews(count)
+        category:categories(id, name, slug),
+        images:product_images(image_url, alt_text, sort_order, is_primary),
+        inventory(quantity_available, quantity_reserved, low_stock_threshold)
       `);
 
     if (filters.category) {
@@ -1011,11 +1006,14 @@ export const adminService = {
     if (filters.on_sale) {
       query = query.eq('on_sale', true);
     }
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    }
 
     const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async createProductWithImages(productData, imageData = null) {
@@ -1031,16 +1029,32 @@ export const adminService = {
       review_count: 0
     };
 
+    // Check current user auth status
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log('[createProductWithImages] Current user:', user?.id);
+    
+    // Check user profile and role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, role')
+      .eq('id', user?.id)
+      .single();
+    console.log('[createProductWithImages] User profile:', profile);
+
     // Create the product
+    console.log('[createProductWithImages] Attempting product insert with data:', completeProductData);
     const { data: products, error: productError } = await supabase
       .from('products')
       .insert(completeProductData)
       .select();
     
     if (productError) {
-      console.error('Product insert error:', productError);
-      throw productError;
+      console.error('[createProductWithImages] Product insert error:', productError);
+      console.error('[createProductWithImages] Error details:', JSON.stringify(productError, null, 2));
+      throw new Error(`Product insert failed: ${productError.message}`);
     }
+    
+    console.log('[createProductWithImages] Product created successfully:', products[0]?.id);
 
     if (!products || products.length === 0) {
       throw new Error('Failed to create product: No data returned');
@@ -1050,7 +1064,8 @@ export const adminService = {
 
     try {
       // Create inventory record
-      await supabase
+      console.log('[createProductWithImages] Attempting inventory insert for product:', product.id);
+      const { error: inventoryError } = await supabase
         .from('inventory')
         .insert({
           product_id: product.id,
@@ -1060,6 +1075,13 @@ export const adminService = {
           track_inventory: true,
           allow_backorder: false
         });
+
+      if (inventoryError) {
+        console.error('[createProductWithImages] Inventory insert error:', inventoryError);
+        console.error('[createProductWithImages] Inventory error details:', JSON.stringify(inventoryError, null, 2));
+        throw new Error(`Inventory insert failed: ${inventoryError.message}`);
+      }
+      console.log('[createProductWithImages] Inventory created successfully');
 
       // Handle images if provided
       if (imageData && imageData.length > 0) {
@@ -1072,16 +1094,24 @@ export const adminService = {
         }));
 
         if (imagesToInsert.length > 0) {
-          await supabase
+          console.log('[createProductWithImages] Attempting product_images insert:', imagesToInsert);
+          const { error: imagesError } = await supabase
             .from('product_images')
             .insert(imagesToInsert);
+
+          if (imagesError) {
+            console.error('[createProductWithImages] Product images insert error:', imagesError);
+            console.error('[createProductWithImages] Images error details:', JSON.stringify(imagesError, null, 2));
+            throw new Error(`Product images insert failed: ${imagesError.message}`);
+          }
+          console.log('[createProductWithImages] Product images created successfully');
         }
       }
 
       return product;
     } catch (error) {
       // If anything fails, try to rollback the product creation
-      console.error('Error creating product resources:', error);
+      console.error('[createProductWithImages] Rollback - deleting product:', error);
       await supabase.from('products').delete().eq('id', product.id);
       throw error;
     }
@@ -1427,41 +1457,83 @@ export const adminService = {
 
   // ── Inventory Management ───────────────────────────────────────
   async getInventoryList(filters = {}) {
-    let query = supabase
+    // First fetch products with basic info
+    let productsQuery = supabase
       .from('products')
       .select(`
-        *,
-        category:categories(name, slug),
-        inventory:inventory(*),
-        variants:product_variants(*),
+        id,
+        name,
+        slug,
+        base_price,
+        compare_at_price,
+        is_active,
+        category_id,
         images:product_images(image_url, is_primary)
       `)
       .eq('is_active', true);
 
     if (filters.search) {
-      query = query.ilike('name', `%${filters.search}%`);
-    }
-    if (filters.category) {
-      query = query.eq('category_id', filters.category);
-    }
-    if (filters.stockLevel) {
-      if (filters.stockLevel === 'low') {
-        query = query.lt('inventory.quantity_available', 'inventory.low_stock_threshold')
-          .gt('inventory.quantity_available', 0);
-      } else if (filters.stockLevel === 'out') {
-        query = query.eq('inventory.quantity_available', 0);
-      } else if (filters.stockLevel === 'normal') {
-        query = query.gte('inventory.quantity_available', 'inventory.low_stock_threshold');
-      }
+      productsQuery = productsQuery.ilike('name', `%${filters.search}%`);
     }
 
-    const { data, error } = await query.order('name', { ascending: true });
+    const { data: products, error: productsError } = await productsQuery.order('name', { ascending: true });
     
-    if (error) throw error;
-    return data;
+    if (productsError) {
+      console.error('[getInventoryList] Products error:', productsError);
+      throw productsError;
+    }
+
+    if (!products || products.length === 0) {
+      return [];
+    }
+
+    // Fetch all inventory records
+    const { data: inventoryData, error: inventoryError } = await supabase
+      .from('inventory')
+      .select('*');
+
+    if (inventoryError) {
+      console.error('[getInventoryList] Inventory fetch error:', inventoryError);
+    }
+
+    // Create inventory lookup map
+    const inventoryMap = new Map();
+    if (inventoryData) {
+      inventoryData.forEach(inv => {
+        inventoryMap.set(inv.product_id, inv);
+      });
+    }
+
+    // Fetch categories for reference
+    const { data: categories } = await supabase.from('categories').select('id, name, slug');
+    const categoryMap = new Map();
+    if (categories) {
+      categories.forEach(cat => categoryMap.set(cat.id, cat));
+    }
+
+    // Combine data
+    const result = products.map(product => {
+      const inventory = inventoryMap.get(product.id) || {
+        quantity_available: 0,
+        quantity_reserved: 0,
+        low_stock_threshold: 5,
+        track_inventory: true,
+        allow_backorder: false
+      };
+
+      return {
+        ...product,
+        inventory,
+        category: categoryMap.get(product.category_id) || null
+      };
+    });
+
+    return result;
   },
 
   async updateStock(productId, quantity, reason = 'adjustment') {
+    console.log('[updateStock] Starting update for product:', productId, 'quantity:', quantity);
+    
     // Get current inventory
     const { data: currentInventory, error: fetchError } = await supabase
       .from('inventory')
@@ -1469,11 +1541,17 @@ export const adminService = {
       .eq('product_id', productId)
       .single();
     
-    if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('[updateStock] Fetch error:', fetchError);
+      throw fetchError;
+    }
+    
+    console.log('[updateStock] Current inventory:', currentInventory);
 
     // Update or create inventory record
     let inventoryData;
     if (currentInventory) {
+      console.log('[updateStock] Updating existing inventory record');
       const { data, error } = await supabase
         .from('inventory')
         .update({ 
@@ -1484,9 +1562,15 @@ export const adminService = {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('[updateStock] Update error:', error);
+        console.error('[updateStock] Update error details:', JSON.stringify(error, null, 2));
+        throw error;
+      }
       inventoryData = data;
+      console.log('[updateStock] Inventory updated successfully');
     } else {
+      console.log('[updateStock] Creating new inventory record');
       const { data, error } = await supabase
         .from('inventory')
         .insert({
@@ -1500,8 +1584,13 @@ export const adminService = {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('[updateStock] Insert error:', error);
+        console.error('[updateStock] Insert error details:', JSON.stringify(error, null, 2));
+        throw error;
+      }
       inventoryData = data;
+      console.log('[updateStock] Inventory created successfully');
     }
 
     // Log the movement
@@ -2170,16 +2259,35 @@ export const adminService = {
   },
 
   async updateProductImage(productId, imageUrl) {
-    const { data, error } = await supabase
+    // Try to update the existing primary image row first
+    const { data: updated, error: updateError } = await supabase
       .from('product_images')
       .update({ image_url: imageUrl })
       .eq('product_id', productId)
       .eq('is_primary', true)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+      .select();
+
+    if (updateError) throw updateError;
+
+    // If no row was updated, insert a new primary image (handles newly-created products)
+    if (!updated || updated.length === 0) {
+      const { data: inserted, error: insertError } = await supabase
+        .from('product_images')
+        .insert({
+          product_id: productId,
+          image_url: imageUrl,
+          alt_text: '',
+          sort_order: 0,
+          is_primary: true,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+      return inserted;
+    }
+
+    return updated[0];
   },
 
   _reportDateCutoff(rangeKey) {
@@ -2332,10 +2440,24 @@ export const adminService = {
   async upsertShippingZone(zone) {
     const { id, ...zoneData } = zone;
     
+    // Convert comma-separated strings to arrays for PostgreSQL
+    const processedData = {
+      ...zoneData,
+      countries: typeof zoneData.countries === 'string' 
+        ? zoneData.countries.split(',').map(s => s.trim()).filter(Boolean)
+        : zoneData.countries,
+      states: typeof zoneData.states === 'string'
+        ? zoneData.states.split(',').map(s => s.trim()).filter(Boolean)
+        : zoneData.states,
+      postal_codes: typeof zoneData.postal_codes === 'string'
+        ? zoneData.postal_codes.split(',').map(s => s.trim()).filter(Boolean)
+        : zoneData.postal_codes,
+    };
+    
     if (id) {
       const { data, error } = await supabase
         .from('shipping_zones')
-        .update(zoneData)
+        .update(processedData)
         .eq('id', id)
         .select()
         .single();
@@ -2344,7 +2466,7 @@ export const adminService = {
     } else {
       const { data, error } = await supabase
         .from('shipping_zones')
-        .insert(zoneData)
+        .insert(processedData)
         .select()
         .single();
       if (error) throw error;

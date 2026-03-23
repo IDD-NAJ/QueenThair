@@ -47,16 +47,10 @@ async function request(path, params = {}) {
  * @returns {Promise<import('../types/product').ProductDetail>}
  */
 export async function getProduct(id, options = {}) {
-  // Legacy path: call direct Supabase service layer instead of edge function
-  if (!USE_V2) {
-    const { getProductById } = await import('../services/productService');
-    const product = await getProductById(id);
-    return /** @type {import('../types/product').ProductDetail} */ (product);
-  }
-
-  const include = options.include || ['images', 'variants', 'inventory', 'category'];
-  const { data } = await request('get-product', { id, include });
-  return /** @type {import('../types/product').ProductDetail} */ (data);
+  // ALWAYS use legacy path - V2 edge functions don't exist
+  const { getProductById } = await import('../services/productService');
+  const product = await getProductById(id);
+  return /** @type {import('../types/product').ProductDetail} */ (product);
 }
 
 /**

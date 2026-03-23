@@ -93,10 +93,12 @@ export default function AdminInventory() {
   const handleSave = async (productId) => {
     setSaving(true);
     try {
+      console.log('[AdminInventory] Updating stock for product:', productId);
       await adminService.updateStock(productId, parseInt(editValues.quantity_available), 'adjustment');
       
       // Update inventory settings
-      await supabase
+      console.log('[AdminInventory] Updating inventory settings');
+      const { error: settingsError } = await supabase
         .from('inventory')
         .update({
           low_stock_threshold: parseInt(editValues.low_stock_threshold),
@@ -106,7 +108,14 @@ export default function AdminInventory() {
         })
         .eq('product_id', productId);
 
+      if (settingsError) {
+        console.error('[AdminInventory] Settings update error:', settingsError);
+        throw settingsError;
+      }
+      console.log('[AdminInventory] Settings updated successfully');
+
       // Log activity
+      console.log('[AdminInventory] Logging activity');
       await adminService.logActivity(null, 'update', 'inventory', productId, {
         quantity: editValues.quantity_available,
         settings: {
@@ -116,10 +125,11 @@ export default function AdminInventory() {
         }
       });
 
+      console.log('[AdminInventory] Reloading inventory data');
       await loadInventory();
       handleCancel();
     } catch (err) {
-      console.error('Failed to update inventory:', err);
+      console.error('[AdminInventory] Failed to update inventory:', err);
       alert('Failed to update inventory: ' + err.message);
     } finally {
       setSaving(false);

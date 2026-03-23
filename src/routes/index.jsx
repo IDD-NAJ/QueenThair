@@ -92,6 +92,7 @@ const AdminIntegrations = lazy(() => import('../pages/admin/AdminIntegrations'))
 const AdminBackup = lazy(() => import('../pages/admin/AdminBackup'));
 const AdminLogs = lazy(() => import('../pages/admin/AdminLogs'));
 const AdminMaintenance = lazy(() => import('../pages/admin/AdminMaintenance'));
+const AdminNotifications = lazy(() => import('../pages/admin/AdminNotifications'));
 const AdminLayout = lazy(() => import('../components/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('../components/admin/AdminDashboard'));
 
@@ -184,6 +185,7 @@ export default function AppRoutes() {
           <Route path="backup" element={<AdminBackup />} />
           <Route path="logs" element={<AdminLogs />} />
           <Route path="maintenance" element={<AdminMaintenance />} />
+          <Route path="notifications" element={<AdminNotifications />} />
         </Route>
         
         {/* Info pages */}

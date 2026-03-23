@@ -23,6 +23,8 @@ export default function AdminProducts() {
   const [showCSVModal, setShowCSVModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [saving, setSaving] = useState(false);
+  // Cached at mount — avoids 2 extra network round-trips on every save
+  const [currentUserId, setCurrentUserId] = useState(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -54,7 +56,13 @@ export default function AdminProducts() {
   const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
-    loadData();
+    // Load data AND cache the current user id in parallel
+    Promise.all([
+      loadData(),
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) setCurrentUserId(user.id);
+      }),
+    ]);
   }, []);
 
   useEffect(() => {
@@ -247,112 +255,119 @@ export default function AdminProducts() {
     setSaving(true);
 
     try {
-      // Check user admin status first
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('Current user:', user);
-      
-      if (!user) {
-        throw new Error('You must be logged in to create products');
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      console.log('User profile:', profile);
-      
-      if (profile?.role !== 'admin') {
-        throw new Error('You must be an admin to create products');
-      }
+      // Use the cached user id from mount — no network call needed here
+      const userId = currentUserId;
+      if (!userId) throw new Error('You must be logged in to save products');
 
       let productId = editingProduct?.id;
-      const currentUser = user.id;
 
-      // Prepare product data (exclude imageUrl as it's handled separately)
-      const { imageUrl, ...productDataWithoutImage } = formData;
+      // Prepare product data
+      const { imageUrl: _imageUrl, ...productDataWithoutImage } = formData;
       const productData = {
         ...productDataWithoutImage,
         base_price: parseFloat(formData.base_price),
         compare_at_price: formData.compare_at_price ? parseFloat(formData.compare_at_price) : null,
       };
 
-      // Handle image data
-      const imageData = imagePreview ? [{
-        url: imageFile ? null : formData.imageUrl, // Will be uploaded separately
-        alt_text: formData.name
-      }] : null;
-
       if (editingProduct) {
-        // Update existing product
+        // ── UPDATE PATH ──────────────────────────────────────────────────
+        // 1. Update core product data first
         await adminService.updateProduct(productId, productData);
-        
-        // Handle image updates
+
+        // 2. Build image + variant promises to run in parallel
+        // Track the URL we'll use in the optimistic state update
+        let optimisticImageUrl = formData.imageUrl || editingProduct.images?.[0]?.image_url || '';
+        let uploadedFileUrl = null; // set after file upload resolves
+
+        let imageUpdatePromise = null;
         if (imageFile) {
-          const imageUrl = await uploadImage(productId);
-          await supabase
-            .from('product_images')
-            .upsert({
-              product_id: productId,
-              image_url: imageUrl,
-              alt_text: formData.name,
-              sort_order: 0,
-              is_primary: true
-            });
+          imageUpdatePromise = uploadImage(productId).then(async (url) => {
+            uploadedFileUrl = url;            // capture the real URL
+            await adminService.updateProductImage(productId, url);
+          });
         } else if (formData.imageUrl && formData.imageUrl !== editingProduct.images?.[0]?.image_url) {
-          await supabase
-            .from('product_images')
-            .upsert({
-              product_id: productId,
-              image_url: formData.imageUrl,
-              alt_text: formData.name,
+          imageUpdatePromise = adminService.updateProductImage(productId, formData.imageUrl);
+        }
+
+        let variantPromise = null;
+        if (variants.length > 0) {
+          variantPromise = adminService.deleteProductVariants(productId)
+            .then(() => adminService.createProductVariants(productId, variants));
+        }
+
+        // 3. Run in parallel; log is fire-and-forget
+        adminService.logActivity(userId, 'update', 'product', productId, { changes: productData });
+        const parallelOps = [imageUpdatePromise, variantPromise].filter(Boolean);
+        if (parallelOps.length > 0) await Promise.all(parallelOps);
+
+        // Use the real uploaded URL if a file was uploaded, else the optimistic URL
+        const finalImageUrl = uploadedFileUrl || optimisticImageUrl;
+
+        // 4. Patch local state instantly — NO reload needed
+        const matchedCategory = categories.find(c => c.id === productData.category_id);
+        setProducts(prev => prev.map(p => {
+          if (p.id !== productId) return p;
+          return {
+            ...p,
+            ...productData,
+            category: matchedCategory
+              ? { id: matchedCategory.id, name: matchedCategory.name }
+              : p.category,
+            images: [{
+              image_url: finalImageUrl,
+              alt_text: productData.name,
+              is_primary: true,
               sort_order: 0,
-              is_primary: true
-            });
-        }
+            }],
+          };
+        }));
 
-        // Log activity
-        await adminService.logActivity(currentUser, 'update', 'product', productId, {
-          changes: productData
-        });
       } else {
-        // Create new product with images - use service method that handles RLS
-        console.log('Creating product with data:', productData);
-        console.log('Image data:', imageData);
-        
-        // Use adminService.createProductWithImages which handles inventory and images
+        // ── CREATE PATH ──────────────────────────────────────────────────
+        const imageData = (!imageFile && formData.imageUrl)
+          ? [{ url: formData.imageUrl, alt_text: formData.name }]
+          : null;
+
+        // 1. Create product (also creates inventory + URL-based image in one call)
         const product = await adminService.createProductWithImages(productData, imageData);
-        console.log('Product created via service:', product);
         productId = product.id;
-        
-        // Handle file upload if needed (separate from the URL-based images)
+
+        // 2. File upload + variants in parallel; log is fire-and-forget
+        adminService.logActivity(userId, 'create', 'product', productId, { product: productData });
+
+        // Run file upload and variants concurrently, capture the uploaded URL cleanly
+        let uploadedImageUrl = formData.imageUrl || '';
+        const pendingOps = [];
+
+        let fileUploadPromise = null;
         if (imageFile) {
-          const uploadedUrl = await uploadImage(productId);
-          console.log('Image uploaded:', uploadedUrl);
-          
-          // Update the product image with the uploaded file URL
-          await adminService.updateProductImage(productId, uploadedUrl);
+          fileUploadPromise = uploadImage(productId).then(async (url) => {
+            await adminService.updateProductImage(productId, url);
+            uploadedImageUrl = url; // capture the real URL
+          });
+          pendingOps.push(fileUploadPromise);
         }
 
-        // Log activity
-        await adminService.logActivity(currentUser, 'create', 'product', productId, {
-          product: productData
-        });
-      }
-
-      // Handle variants using adminService
-      if (variants.length > 0) {
-        // Delete existing variants if editing
-        if (editingProduct) {
-          await adminService.deleteProductVariants(productId);
+        if (variants.length > 0) {
+          pendingOps.push(adminService.createProductVariants(productId, variants));
         }
 
-        // Create new variants
-        await adminService.createProductVariants(productId, variants);
+        if (pendingOps.length > 0) await Promise.all(pendingOps);
+
+        // 3. Prepend new product to local state — NO loadData() needed
+        const matchedCategory = categories.find(c => c.id === productData.category_id);
+        const newProductEntry = {
+          ...product,
+          ...productData,
+          category: matchedCategory ? { id: matchedCategory.id, name: matchedCategory.name } : null,
+          images: uploadedImageUrl
+            ? [{ image_url: uploadedImageUrl, alt_text: productData.name, is_primary: true, sort_order: 0 }]
+            : [],
+          inventory: { quantity_available: 0, quantity_reserved: 0, low_stock_threshold: 5 },
+        };
+        setProducts(prev => [newProductEntry, ...prev]);
       }
 
-      await loadData();
       handleCloseModal();
     } catch (err) {
       console.error('Failed to save product:', err);
@@ -367,13 +382,9 @@ export default function AdminProducts() {
     
     try {
       await adminService.deleteProduct(id);
-      
-      // Log activity
-      await adminService.logActivity(null, 'delete', 'product', id, {
-        deleted: true
-      });
-      
-      await loadData();
+      // Fire-and-forget log; remove from local state instantly
+      adminService.logActivity(currentUserId, 'delete', 'product', id, { deleted: true });
+      setProducts(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Failed to delete product:', err);
       alert('Failed to delete product: ' + err.message);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ShoppingBag, Heart, Truck, RefreshCw, Shield, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import useStore from '../store/useStore';
 import { getProduct, listProducts, searchProducts } from '../api/products';
 import { getProductReviews, getRatingSummary } from '../services/reviewService';
@@ -45,12 +45,17 @@ export default function ProductPage() {
           .single();
         if (error || !data) throw error || new Error('Product not found');
 
+        console.log('[ProductPage] Fetching product details for id:', data.id);
         const detail = await getProduct(data.id, { include: ['images', 'variants', 'inventory', 'category'] });
+        console.log('[ProductPage] Product loaded:', detail?.name);
+        console.log('[ProductPage] Images received:', detail?.images?.length, detail?.images);
+        console.log('[ProductPage] Variants received:', detail?.variants?.length, detail?.variants);
+        console.log('[ProductPage] Inventory received:', detail?.inventory);
         setProduct(detail);
         
         // Set default variant
-        if (data?.variants && data.variants.length > 0) {
-          setSelectedVariant(data.variants[0]);
+        if (detail?.variants && detail.variants.length > 0) {
+          setSelectedVariant(detail.variants[0]);
         }
 
         // Fetch related products
@@ -191,38 +196,93 @@ export default function ProductPage() {
         className="grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-6 sm:gap-8 lg:gap-12 items-start max-w-[1200px] mx-auto py-6 sm:py-8 lg:py-10 px-4 sm:px-6 lg:px-10"
       >
         {/* GALLERY */}
-        <div className="lg:sticky lg:top-[88px]">
-          <div className="aspect-[3/4] bg-neutral-100 rounded overflow-hidden mb-2.5">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          className="lg:sticky lg:top-[88px]"
+        >
+          {/* Main Image with Zoom Effect */}
+          <motion.div 
+            className="aspect-[3/4] bg-neutral-100 rounded overflow-hidden mb-2.5 cursor-zoom-in group"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.4 }}
+          >
             {images.length > 0 ? (
-              <Img 
-                src={images[activeImg]?.image_url}
-                alt={images[activeImg]?.alt_text || product.name}
-                loading="eager"
-              />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeImg}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="w-full h-full"
+                >
+                  <motion.div 
+                    className="w-full h-full"
+                    whileHover={{ scale: 1.08 }}
+                    transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                  >
+                    <Img 
+                      src={images[activeImg]?.image_url}
+                      alt={images[activeImg]?.alt_text || product.name}
+                      loading="eager"
+                    />
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-text-muted">
                 No image available
               </div>
             )}
-          </div>
+          </motion.div>
+
+          {/* Thumbnails with Stagger Animation */}
           {images.length > 1 && (
-            <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-4 gap-2">
+            <motion.div 
+              className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-4 gap-2"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.05 }
+                }
+              }}
+            >
               {images.map((img, i) => (
-                <div 
+                <motion.div 
                   key={img.id || i}
-                  className={`aspect-square bg-neutral-100 rounded overflow-hidden border-2 cursor-pointer transition-colors ${activeImg === i ? 'border-gold' : 'border-transparent hover:border-gold'}`}
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveImg(i)}
+                  className={`aspect-square bg-neutral-100 rounded overflow-hidden border-2 cursor-pointer transition-all duration-300 ${activeImg === i ? 'border-gold shadow-md' : 'border-transparent hover:border-gold'}`}
                 >
-                  <Img 
-                    src={img.image_url}
-                    alt={img.alt_text || `${product.name} - view ${i + 1}`}
-                    loading="lazy"
-                  />
-                </div>
+                  <motion.div
+                    animate={{ 
+                      opacity: activeImg === i ? 1 : 0.7,
+                      scale: activeImg === i ? 1 : 0.95
+                    }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full h-full"
+                  >
+                    <Img 
+                      src={img.image_url}
+                      alt={img.alt_text || `${product.name} - view ${i + 1}`}
+                      loading="lazy"
+                    />
+                  </motion.div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* INFO */}
         <div>

@@ -33,7 +33,7 @@ export default function DashboardOverview() {
       .finally(() => setPending((p) => ({ ...p, orders: false })));
 
     getWishlist(user.id)
-      .then((list) => setWishlist(list || []))
+      .then((response) => setWishlist(response?.items || []))
       .catch(() => setWishlist([]))
       .finally(() => setPending((p) => ({ ...p, wishlist: false })));
   }, [user]);

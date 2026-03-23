@@ -7,7 +7,7 @@ import Badge from '../common/Badge';
 import Img from '../common/Img';
 import { CURRENCY_SYMBOL } from '../../constants';
 
-export default function ProductCard({ product, revealOnMount = false }) {
+export default function ProductCard({ product, index = 0 }) {
   const [activeColor, setActiveColor] = useState(0);
   const addToCart = useStore(state => state.addToCart);
   const toggleWishlist = useStore(state => state.toggleWishlist);
@@ -29,16 +29,9 @@ export default function ProductCard({ product, revealOnMount = false }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      {...(revealOnMount
-        ? {
-            animate: { opacity: 1, y: 0 },
-            transition: { duration: 0.4 },
-          }
-        : {
-            whileInView: { opacity: 1, y: 0 },
-            viewport: { once: true, margin: '-50px' },
-            transition: { duration: 0.4 },
-          })}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
     >
       <Link 
         to={`/product/${product.slug}`}

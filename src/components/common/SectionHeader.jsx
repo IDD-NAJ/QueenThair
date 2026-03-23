@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '../../utils/cn';
 
 export default function SectionHeader({ 
@@ -11,7 +12,13 @@ export default function SectionHeader({
   className 
 }) {
   return (
-    <div className={cn('flex items-end justify-between mb-8 sm:mb-10', className)}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.5 }}
+      className={cn('flex items-end justify-between mb-8 sm:mb-10', className)}
+    >
       <div>
         {label && (
           <div className="text-[10px] tracking-[0.18em] uppercase text-gold mb-2 flex items-center gap-2">
@@ -35,6 +42,6 @@ export default function SectionHeader({
           <ArrowRight className="w-4 h-4" />
         </Link>
       )}
-    </div>
+    </motion.div>
   );
 }

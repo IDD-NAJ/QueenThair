@@ -20,7 +20,7 @@ import SectionGridSkeleton from '../components/common/SectionGridSkeleton';
 import useStore from '../store/useStore';
 import { resolveShowcaseTileMedia, isLikelyHttpUrl } from '../utils/categoryShowcase';
 
-function HomepageCategoryTile({ to, title, description, imageUrl, videoUrl }) {
+function HomepageCategoryTile({ to, title, description, imageUrl, videoUrl, index = 0 }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [vidFailed, setVidFailed] = useState(false);
 
@@ -35,8 +35,9 @@ function HomepageCategoryTile({ to, title, description, imageUrl, videoUrl }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
     >
       <Link
         to={to}
@@ -418,8 +419,8 @@ export default function HomePage() {
         return (
           <motion.section 
             id="categories" 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6 }}
             className="py-12 sm:py-16 lg:py-20"
@@ -437,7 +438,7 @@ export default function HomePage() {
                   className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
                 >
                   {useCustom
-                    ? customCards.map((item) => {
+                    ? customCards.map((item, idx) => {
                         const { imageUrl, videoUrl } = resolveShowcaseTileMedia(item, categories);
                         return (
                           <HomepageCategoryTile
@@ -447,10 +448,11 @@ export default function HomePage() {
                             description={item.description}
                             imageUrl={imageUrl}
                             videoUrl={videoUrl}
+                            index={idx}
                           />
                         );
                       })
-                    : categories.slice(0, 8).map((cat) => (
+                    : categories.slice(0, 8).map((cat, idx) => (
                         <HomepageCategoryTile
                           key={cat.id}
                           to={`/shop/${cat.slug}`}
@@ -458,6 +460,7 @@ export default function HomePage() {
                           description={cat.description}
                           imageUrl={cat.image_url?.trim() || ''}
                           videoUrl=""
+                          index={idx}
                         />
                       ))}
                 </motion.div>
@@ -471,8 +474,8 @@ export default function HomePage() {
       {((pending.newArrivals && newArrivals.length === 0) || newArrivals.length > 0) && (
         <motion.section
           id="new-arrivals"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
           className="py-12 sm:py-16 lg:py-20 bg-warm-white"
@@ -493,8 +496,8 @@ export default function HomePage() {
                 viewport={{ once: true, margin: '-50px' }}
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
               >
-                {newArrivals.map((product) => (
-                  <ProductCard key={product.id} product={product} revealOnMount />
+                {newArrivals.map((product, idx) => (
+                  <ProductCard key={product.id} product={product} index={idx} />
                 ))}
               </motion.div>
             )}
@@ -506,8 +509,8 @@ export default function HomePage() {
       {((pending.bestsellers && bestsellers.length === 0) || bestsellers.length > 0) && (
         <motion.section
           id="bestsellers"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
           className="py-12 sm:py-16 lg:py-20"
@@ -528,8 +531,8 @@ export default function HomePage() {
                 viewport={{ once: true, margin: '-50px' }}
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
               >
-                {bestsellers.map((product) => (
-                  <ProductCard key={product.id} product={product} revealOnMount />
+                {bestsellers.map((product, idx) => (
+                  <ProductCard key={product.id} product={product} index={idx} />
                 ))}
               </motion.div>
             )}
@@ -541,8 +544,8 @@ export default function HomePage() {
       {((pending.featured && featured.length === 0) || featured.length > 0) && (
         <motion.section
           id="featured"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
           className="py-12 sm:py-16 lg:py-20 bg-warm-white"
@@ -562,8 +565,8 @@ export default function HomePage() {
                 viewport={{ once: true, margin: '-50px' }}
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
               >
-                {featured.map((product) => (
-                  <ProductCard key={product.id} product={product} revealOnMount />
+                {featured.map((product, idx) => (
+                  <ProductCard key={product.id} product={product} index={idx} />
                 ))}
               </motion.div>
             )}
@@ -575,8 +578,8 @@ export default function HomePage() {
       {((pending.onSale && onSale.length === 0) || onSale.length > 0) && (
         <motion.section
           id="on-sale"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
           className="py-12 sm:py-16 lg:py-20"
@@ -597,8 +600,8 @@ export default function HomePage() {
                 viewport={{ once: true, margin: '-50px' }}
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
               >
-                {onSale.map((product) => (
-                  <ProductCard key={product.id} product={product} revealOnMount />
+                {onSale.map((product, idx) => (
+                  <ProductCard key={product.id} product={product} index={idx} />
                 ))}
               </motion.div>
             )}

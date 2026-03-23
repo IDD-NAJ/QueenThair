@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { analytics } from '../utils/analytics';
+import { toggleWishlist as toggleWishlistService, getWishlist } from '../services/wishlistService';
+import supabase from '../lib/supabaseClient';
 
 // Generates a stable anonymous session ID for guest cart/tracking
 function makeSessionId() {
@@ -49,14 +51,47 @@ const useStore = create(
       setWishlist: (wishlist) => set({ wishlist }),
       addToWishlist: (item) => set((state) => ({ wishlist: [...state.wishlist, item] })),
       removeFromWishlist: (itemId) => set((state) => ({ wishlist: state.wishlist.filter(item => item.id !== itemId) })),
-      toggleWishlist: (productId) => {
-        const { wishlist } = get();
-        if (wishlist.includes(productId)) {
+      
+      loadWishlistFromDB: async () => {
+        const { user } = get();
+        if (!user) return;
+        try {
+          const { items } = await getWishlist(user.id);
+          // Extract product IDs from wishlist items
+          const productIds = items.map(item => item.product_id);
+          set({ wishlist: productIds });
+        } catch (err) {
+          console.error('Failed to load wishlist:', err);
+        }
+      },
+      
+      toggleWishlist: async (productId) => {
+        const { wishlist, user } = get();
+        const isWishlisted = wishlist.includes(productId);
+        
+        // Optimistically update UI
+        if (isWishlisted) {
           set({ wishlist: wishlist.filter(id => id !== productId) });
           get().showToast('Removed from wishlist');
         } else {
           set({ wishlist: [...wishlist, productId] });
           get().showToast('Added to wishlist');
+        }
+        
+        // Sync to database if user is logged in
+        if (user) {
+          try {
+            await toggleWishlistService(user.id, productId);
+          } catch (err) {
+            console.error('Failed to sync wishlist:', err);
+            // Revert UI on error
+            if (isWishlisted) {
+              set({ wishlist: [...wishlist, productId] });
+            } else {
+              set({ wishlist: wishlist.filter(id => id !== productId) });
+            }
+            get().showToast('Failed to update wishlist');
+          }
         }
       },
       isInWishlist: (productId) => get().wishlist.includes(productId),
@@ -123,14 +158,18 @@ const useStore = create(
         isAuthenticated: !!user,
       }),
 
-      /** Set session user + profile in one update so role is never stale (e.g. GuestRoute after login). */
-      setUserAndProfile: (user, profile) =>
+      setUserAndProfile: (user, profile) => {
         set({
           user,
           profile,
           role: profile?.role ?? null,
           isAuthenticated: !!user,
-        }),
+        });
+        // Load wishlist from DB when user is set
+        if (user) {
+          get().loadWishlistFromDB();
+        }
+      },
 
       setProfile: (profile) => set({ 
         profile,
