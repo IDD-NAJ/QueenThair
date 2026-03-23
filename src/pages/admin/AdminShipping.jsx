@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Plus, Edit2, Trash2, Search, MapPin, DollarSign, Package, Clock, Globe } from 'lucide-react';
+import { Truck, Plus, Edit2, Trash2, Search, MapPin, DollarSign, Package, Clock, Globe, Eye, EyeOff } from 'lucide-react';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import { adminService } from '../../services/adminService';
@@ -169,12 +169,12 @@ export default function AdminShipping() {
     }
   };
 
-  const filteredZones = shippingZones.filter(zone =>
+  const filteredZones = (shippingZones || []).filter(zone =>
     zone.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     zone.countries.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredRates = shippingRates.filter(rate =>
+  const filteredRates = (shippingRates || []).filter(rate =>
     rate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     rate.zone_name.toLowerCase().includes(searchTerm.toLowerCase())
   );

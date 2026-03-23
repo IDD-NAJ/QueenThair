@@ -4,7 +4,7 @@ import { DollarSign, TrendingUp, TrendingDown, CreditCard, ShoppingCart, Calenda
 import { adminService } from '../../services/adminService';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
-import { format, subDays, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
+import { format, subDays, startOfDay, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
 import { 
   handleAdminError, 
   safeCalculatePercentage, 

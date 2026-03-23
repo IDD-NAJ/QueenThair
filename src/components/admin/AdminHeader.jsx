@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Search, 
@@ -10,48 +10,22 @@ import {
   Home,
   ChevronDown,
   Sun,
-  Moon
+  Moon,
+  Loader2
 } from 'lucide-react';
+import { useNotifications } from '../../hooks/useNotifications';
+import useStore from '../../store/useStore';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function AdminHeader({ onMenuClick, showMobileMenu }) {
   const location = useLocation();
+  const { user } = useStore();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
-  // Mock notifications
-  const notifications = [
-    {
-      id: 1,
-      type: 'order',
-      message: 'New order #QTH-000123 received',
-      time: '2 minutes ago',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'customer',
-      message: 'New customer registration',
-      time: '15 minutes ago',
-      read: false
-    },
-    {
-      id: 3,
-      type: 'system',
-      message: 'Database backup completed successfully',
-      time: '1 hour ago',
-      read: true
-    },
-    {
-      id: 4,
-      type: 'inventory',
-      message: 'Low stock alert: Luxury Hair Extensions',
-      time: '2 hours ago',
-      read: true
-    }
-  ];
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // Real notifications from database
+  const { items: notifications, unreadCount, loading: notificationsLoading } = useNotifications(user?.id);
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -89,15 +63,32 @@ export default function AdminHeader({ onMenuClick, showMobileMenu }) {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'order':
+      case 'new_order':
         return '📦';
       case 'customer':
+      case 'new_customer':
         return '👤';
       case 'system':
+      case 'backup':
         return '⚙️';
       case 'inventory':
+      case 'low_stock':
         return '📊';
+      case 'review':
+        return '⭐';
+      case 'message':
+        return '💬';
       default:
         return '📢';
+    }
+  };
+
+  const formatNotificationTime = (createdAt) => {
+    if (!createdAt) return '';
+    try {
+      return formatDistanceToNow(new Date(createdAt), { addSuffix: false }) + ' ago';
+    } catch {
+      return createdAt;
     }
   };
 
@@ -163,27 +154,37 @@ export default function AdminHeader({ onMenuClick, showMobileMenu }) {
                     <p className="text-xs text-gray-500">{unreadCount} unread</p>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 hover:bg-gray-50 border-b border-gray-100 ${
-                          !notification.read ? 'bg-blue-50' : ''
-                        }`}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <span className="text-lg">{getNotificationIcon(notification.type)}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900">{notification.message}</p>
-                            <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                    {notificationsLoading ? (
+                      <div className="p-4 flex items-center justify-center">
+                        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-gray-500">
+                        No notifications
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 hover:bg-gray-50 border-b border-gray-100 ${
+                            !notification.read ? 'bg-blue-50' : ''
+                          }`}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <span className="text-lg">{getNotificationIcon(notification.type)}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-900">{notification.title || notification.message}</p>
+                              <p className="text-xs text-gray-500 mt-1">{formatNotificationTime(notification.created_at)}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                   <div className="p-3 border-t border-gray-200">
-                    <button className="w-full text-center text-sm text-indigo-600 hover:text-indigo-800">
+                    <Link to="/admin/notifications" className="w-full text-center text-sm text-indigo-600 hover:text-indigo-800 block">
                       View all notifications
-                    </button>
+                    </Link>
                   </div>
                 </div>
               )}

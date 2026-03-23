@@ -2300,6 +2300,103 @@ export const adminService = {
     }
 
     return {};
+  },
+
+  // ── Shipping Zones & Rates ────────────────────────────────────
+  async getShippingZonesWithRates() {
+    const { data: zones, error: zonesError } = await supabase
+      .from('shipping_zones')
+      .select('*')
+      .order('name', { ascending: true });
+    
+    if (zonesError) throw zonesError;
+    
+    const { data: rates, error: ratesError } = await supabase
+      .from('shipping_rates')
+      .select('*');
+    
+    if (ratesError) throw ratesError;
+    
+    // Attach rates to their zones
+    const ratesByZone = (rates || []).reduce((acc, rate) => {
+      acc[rate.zone_id] = (acc[rate.zone_id] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return (zones || []).map(zone => ({
+      ...zone,
+      rate_count: ratesByZone[zone.id] || 0
+    }));
+  },
+
+  async upsertShippingZone(zone) {
+    const { id, ...zoneData } = zone;
+    
+    if (id) {
+      const { data, error } = await supabase
+        .from('shipping_zones')
+        .update(zoneData)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } else {
+      const { data, error } = await supabase
+        .from('shipping_zones')
+        .insert(zoneData)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+  },
+
+  async deleteShippingZone(zoneId) {
+    // Delete rates first (foreign key constraint)
+    await supabase
+      .from('shipping_rates')
+      .delete()
+      .eq('zone_id', zoneId);
+    
+    const { error } = await supabase
+      .from('shipping_zones')
+      .delete()
+      .eq('id', zoneId);
+    
+    if (error) throw error;
+  },
+
+  async upsertShippingRate(rate) {
+    const { id, ...rateData } = rate;
+    
+    if (id) {
+      const { data, error } = await supabase
+        .from('shipping_rates')
+        .update(rateData)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } else {
+      const { data, error } = await supabase
+        .from('shipping_rates')
+        .insert(rateData)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+  },
+
+  async deleteShippingRate(rateId) {
+    const { error } = await supabase
+      .from('shipping_rates')
+      .delete()
+      .eq('id', rateId);
+    
+    if (error) throw error;
   }
 };
 
