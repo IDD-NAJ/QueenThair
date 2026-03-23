@@ -473,18 +473,18 @@ export default function AdminReports() {
       )}
 
       {/* Report Preview Modal */}
-      {selectedTemplate && (
+      {selectedReport && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setSelectedTemplate(null)} />
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setSelectedReport(null)} />
             
             <div className="relative bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Report Preview: {selectedTemplate.name}
+                  Report Preview: {selectedReport.name}
                 </h2>
                 <button
-                  onClick={() => setSelectedTemplate(null)}
+                  onClick={() => setSelectedReport(null)}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   ×
