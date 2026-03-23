@@ -1,0 +1,177 @@
+version: '3.8'
+
+# =============================================================================
+# QUEENTHAIR Local Development Environment
+# =============================================================================
+# This docker-compose file sets up the complete local development environment
+# including PostgreSQL, Redis, and the API service.
+#
+# Usage:
+#   docker-compose up -d        # Start all services in background
+#   docker-compose up            # Start all services with logs
+#   docker-compose down          # Stop all services
+#   docker-compose down -v       # Stop and remove volumes (reset data)
+#   docker-compose logs -f api    # Follow API logs
+#
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL Database
+  # ===========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: queenthair-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: queenthair_user
+      POSTGRES_PASSWORD: queenthair_password
+      POSTGRES_DB: queenthair
+      # Enable WAL archiving for point-in-time recovery
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U queenthair_user -d queenthair"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - queenthair-network
+
+  # ===========================================================================
+  # Redis Cache & Rate Limiting
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: queenthair-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - queenthair-network
+
+  # ===========================================================================
+  # QUEENTHAIR API Service
+  # ===========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: queenthair-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      APP_VERSION: 1.0.0
+      SERVER_ID: queenthair-api-local
+      
+      # JWT Configuration
+      JWT_SECRET: local_development_secret_key_not_for_production
+      JWT_ACCESS_EXPIRY: 15m
+      JWT_REFRESH_EXPIRY: 7d
+      
+      # Database
+      DATABASE_URL: postgresql://queenthair_user:queenthair_password@postgres:5432/queenthair
+      DB_POOL_MIN: 2
+      DB_POOL_MAX: 10
+      
+      # Redis
+      REDIS_URL: redis://redis:6379
+      
+      # CORS
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173
+      
+      # Rate Limiting
+      RATE_LIMIT_WHITELIST: 127.0.0.1,192.168.0.0/16
+      
+      # Email (Mailhog for local testing)
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_FROM: noreply@queenthair.local
+      ALERT_EMAIL_TO: admin@queenthair.local
+      
+      # Disable external alerts in development
+      ENABLE_SMS_ALERTS: "false"
+      ENABLE_SLACK_ALERTS: "false"
+      ENABLE_EMAIL_ALERTS: "true"
+      
+      # Security
+      BCRYPT_ROUNDS: 10
+      
+      # Frontend
+      FRONTEND_URL: http://localhost:5173
+      
+      # Logging
+      LOG_LEVEL: debug
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - queenthair-network
+    command: npm run dev
+
+  # ===========================================================================
+  # Mailhog - Email Testing
+  # ===========================================================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: queenthair-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI (http://localhost:8025)
+    networks:
+      - queenthair-network
+
+  # ===========================================================================
+  # Adminer - Database Management
+  # ===========================================================================
+  adminer:
+    image: adminer:latest
+    container_name: queenthair-adminer
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    networks:
+      - queenthair-network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  queenthair-network:
+    driver: bridge
